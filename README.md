@@ -135,3 +135,22 @@ rug <- vrml(r, s = 5)
 # plot
 plot(rug, main = "Vector Ruggedness of Local Relief")
 ```
+## Days Since Peak IRG
+
+```r
+library(ecologytools)
+library(terra)
+
+# create example time-series raster (5 layers)
+r <- rast(nrows = 50, ncols = 50, nlyrs = 5)
+values(r) <- runif(ncell(r) * nlyr(r))
+
+# compute time since peak IRG
+out <- days_since_peak_IRG(r)
+
+# absolute distance from peak (optional)
+out_abs <- days_since_peak_IRG(r, absolute_value = TRUE)
+
+# plot one layer
+plot(out, main = "Days Since Peak IRG")
+```
