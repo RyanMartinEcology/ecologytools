@@ -1,6 +1,6 @@
 Package: ecologytools
 Title: Utilities and Data Visualization Tools for Ecology
-Version: 0.1.0
+Version: 0.2.0
 Authors@R: 
     person("Ryan", "Martin", email = "ryanmartin@uidaho.edu", role = c("aut", "cre"))
 Description: Provides custom functions and plotting utilities for ecological data analysis and visualization. The current version includes the theme_martin() ggplot2 theme for creating publication-style figures.
