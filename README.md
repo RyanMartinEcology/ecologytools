@@ -1,12 +1,13 @@
-# Install with remotes package
+# Installation Instructions
 
+## remotes Package
 ```r
 install.packages("remotes")
 remotes::install_github("RyanMartinEcology/ecologytools")
 library(ecologytools)
 ```
 
-# Install with devtools package
+## devtools Package
 
 ```r
 install.packages("devtools")
@@ -14,7 +15,7 @@ devtools::install_github("RyanMartinEcology/ecologytools")
 library(ecologytools)
 ```
 
-## Plot Utility Examples 
+# Plot Utility Examples 
 
 ```r
 library(ggplot2)
@@ -83,9 +84,9 @@ ggplot(df_facet, aes(x, y)) +
   facet_wrap(~group) +
   theme_martin()
 ```
-## Spatial utilities
+# Spatial Utilities
 
-### Distance to escape terrain
+## Distance to Escape Terrain
 
 ```r
 library(terra)
@@ -108,4 +109,29 @@ values(r) <- z
 d <- dist_escape(r, escape_slope = 65)
 
 plot(d, main = "Distance to escape terrain")
+```
+## Vector Ruggedness Measure - Local (VRML)
+```r
+library(ecologytools)
+library(terra)
+
+# create example DEM
+r <- rast(nrows = 100, ncols = 100, xmin = 0, xmax = 100, ymin = 0, ymax = 100)
+
+xy <- as.data.frame(crds(r))
+z <- with(
+  xy,
+  800 +
+    250 * exp(-((x - 30)^2 + (y - 35)^2) / 250) +
+    180 * exp(-((x - 70)^2 + (y - 65)^2) / 180) -
+    120 * exp(-((x - 55)^2 + (y - 45)^2) / 120)
+)
+
+values(r) <- z
+
+# compute local ruggedness
+rug <- vrml(r, s = 5)
+
+# plot
+plot(rug, main = "Vector Ruggedness of Local Relief")
 ```
