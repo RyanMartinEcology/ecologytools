@@ -86,7 +86,7 @@ ggplot(df_facet, aes(x, y)) +
 ```
 # Spatial Utilities
 
-## Distance to Escape Terrain
+## Distance to Escape Terrain [dist_escape()]
 
 ```r
 library(terra)
@@ -110,7 +110,7 @@ d <- dist_escape(r, escape_slope = 65)
 
 plot(d, main = "Distance to escape terrain")
 ```
-## Vector Ruggedness Measure - Local (VRML)
+## Vector Ruggedness Measure - Local (VRML) [vrml()]
 ```r
 library(ecologytools)
 library(terra)
@@ -135,7 +135,7 @@ rug <- vrml(r, s = 5)
 # plot
 plot(rug, main = "Vector Ruggedness of Local Relief")
 ```
-## Days Since Peak IRG
+## Days Since Peak IRG [days_since_peak_IRG()]
 
 ```r
 library(ecologytools)
@@ -153,4 +153,20 @@ out_abs <- days_since_peak_IRG(r, absolute_value = TRUE)
 
 # plot one layer
 plot(out, main = "Days Since Peak IRG")
+```
+## Aggregate Raster [aggregate_raster()]
+
+```r
+library(ecologytools)
+library(terra)
+
+# create example raster with 12 layers (e.g., daily data)
+r <- rast(nrows = 50, ncols = 50, nlyrs = 12)
+values(r) <- runif(ncell(r) * nlyr(r))
+
+# aggregate into 3-layer periods (e.g., 3-day means)
+out <- aggregate_raster(r, n = 3, fun = mean)
+
+# plot first aggregated layer
+plot(out, main = "Aggregated Raster")
 ```
