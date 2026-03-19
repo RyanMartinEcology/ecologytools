@@ -97,7 +97,7 @@ theme_martin <- function(
     }
   }
 
-  axis_lwd <- 0.9
+  axis_lwd <- 1
 
   bg_fill <- switch(
     background,
