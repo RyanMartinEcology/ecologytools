@@ -252,10 +252,7 @@ theme_martin <- function(
         color = rm_black
       ),
 
-      axis.line = ggplot2::element_line(
-        color = rm_black,
-        linewidth = axis_lwd
-      ),
+      axis.line = ggplot2::element_blank(),
 
       axis.ticks = ggplot2::element_line(
         color = rm_black,
