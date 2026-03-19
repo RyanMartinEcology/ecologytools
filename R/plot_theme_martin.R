@@ -222,18 +222,12 @@ theme_martin <- function(
         color = rm_black
       ),
 
-      strip.background.x = ggplot2::element_rect(
+      strip.background = ggplot2::element_rect(
         fill = strip_fill,
         colour = rm_black,
-        linewidth = axis_lwd,
-        inherit.blank = FALSE
+        linewidth = axis_lwd
       ),
-      strip.background.y = ggplot2::element_rect(
-        fill = strip_fill,
-        colour = rm_black,
-        linewidth = axis_lwd,
-        inherit.blank = FALSE
-      ),
+
 
       legend.title = ggplot2::element_text(
         family = font,
