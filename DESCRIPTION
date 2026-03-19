@@ -14,7 +14,8 @@ Imports:
     ragg,
     showtext,
     grid,
-    terra
+    terra,
+    spatialEco
 Suggests:
     ggtext,
     patchwork
