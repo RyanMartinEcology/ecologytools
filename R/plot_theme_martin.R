@@ -191,7 +191,7 @@ theme_martin <- function(
       strip.text = ggplot2::element_text(
         family = font,
         face = "bold",
-        size = 11,
+        size = 14,
         color = rm_black
       ),
 
@@ -213,6 +213,12 @@ theme_martin <- function(
       axis.line = ggplot2::element_line(color = rm_black, linewidth = 0.8),
       axis.ticks = ggplot2::element_line(color = rm_black, linewidth = 0.8),
 
+      panel.border = ggplot2::element_rect(
+        color = rm_black,
+        fill = NA,
+        linewidth = 0.8
+      ),
+
       legend.position = legend.position,
       legend.direction = legend_direction,
       legend.title.align = 0.5,
@@ -225,7 +231,12 @@ theme_martin <- function(
 
       plot.background = ggplot2::element_rect(fill = bg_fill, color = NA),
       panel.background = ggplot2::element_rect(fill = bg_fill, color = NA),
-      strip.background = ggplot2::element_blank()
+
+      strip.background = ggplot2::element_rect(
+        fill = if (background == "offwhite") "#F2EFE8" else "grey92",
+        color = rm_black,
+        linewidth = 0.8
+      )
     )
 
   grid_theme <- switch(
