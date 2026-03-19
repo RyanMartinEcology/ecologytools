@@ -55,13 +55,30 @@ theme_martin <- function(
     fontface = "bold",
     legend.title = "Legend Title",
     legend.ncol = 1,
-    legend.position = c("right", "left", "top", "bottom", "none"),
+    legend.position = c("right",
+                        "left",
+                        "top",
+                        "bottom",
+                        "none"),
     axis.text.x.angle = 0,
-    color = c("discrete", "gradient_earth", "gradient_earth_discrete", "spectral", "none"),
-    fill = c("discrete", "gradient_earth", "gradient_earth_discrete", "spectral", "none"),
-    grid = c("none", "y", "x", "both"),
+    color = c("discrete",
+              "gradient_earth",
+              "gradient_earth_discrete",
+              "spectral",
+              "none"),
+    fill = c("discrete",
+             "gradient_earth",
+             "gradient_earth_discrete",
+             "spectral",
+             "none"),
+    grid = c("none",
+             "y",
+             "x",
+             "both"),
     tight_axes = FALSE,
-    background = c("white", "offwhite", "transparent"),
+    background = c("white",
+                   "offwhite",
+                   "transparent"),
     equal_axes = FALSE,
     one_to_one_line = FALSE,
     hline = NULL,
@@ -75,10 +92,16 @@ theme_martin <- function(
   legend.position <- match.arg(legend.position)
   background <- match.arg(background)
 
+  if (!is.null(shade)) {
+    if (!is.numeric(shade) || length(shade) %% 2 != 0) {
+      stop("shade must be NULL or a numeric vector with even length.")
+    }
+  }
+
   # consistent line width
   axis_lwd <- 0.9
 
-  # make geom_text + geom_label follow theme font and bold
+  # ensure geom_text + geom_label are bold and use font
   ggplot2::update_geom_defaults(
     "text",
     list(family = font, fontface = "bold", colour = rm_black)
@@ -89,12 +112,6 @@ theme_martin <- function(
     list(family = font, fontface = "bold", colour = rm_black)
   )
 
-  if (!is.null(shade)) {
-    if (!is.numeric(shade) || length(shade) %% 2 != 0) {
-      stop("shade must be NULL or a numeric vector with even length.")
-    }
-  }
-
   bg_fill <- switch(
     background,
     "transparent" = NA,
@@ -102,10 +119,21 @@ theme_martin <- function(
     "white" = "white"
   )
 
+  strip_fill <- switch(
+    background,
+    "transparent" = "grey92",
+    "offwhite" = "#F2EFE8",
+    "white" = "grey92"
+  )
+
   hjust_val <- if (axis.text.x.angle == 0) 0.5 else 1
   vjust_val <- if (axis.text.x.angle == 0) 0.5 else 1
 
-  legend_direction <- if (legend.position %in% c("top", "bottom")) "horizontal" else "vertical"
+  legend_direction <- if (legend.position %in% c("top", "bottom")) {
+    "horizontal"
+  } else {
+    "vertical"
+  }
 
   color_guide <- if (legend.position %in% c("top", "bottom")) {
     ggplot2::guide_legend(nrow = 1, byrow = TRUE)
@@ -130,8 +158,8 @@ theme_martin <- function(
       ),
 
       plot.caption = ggplot2::element_text(
-        family = font, face = "italic", size = 10, hjust = 0,
-        margin = ggplot2::margin(t = 10), color = rm_black
+        family = font, face = "italic", size = 10,
+        hjust = 0, margin = ggplot2::margin(t = 10), color = rm_black
       ),
 
       axis.title = ggplot2::element_text(
@@ -161,7 +189,7 @@ theme_martin <- function(
       ),
 
       strip.background = ggplot2::element_rect(
-        fill = if (background == "offwhite") "#F2EFE8" else "grey92",
+        fill = strip_fill,
         color = rm_black,
         linewidth = axis_lwd
       ),
@@ -178,7 +206,9 @@ theme_martin <- function(
       axis.ticks = ggplot2::element_line(color = rm_black, linewidth = axis_lwd),
 
       panel.border = ggplot2::element_rect(
-        color = rm_black, fill = NA, linewidth = axis_lwd
+        color = rm_black,
+        fill = NA,
+        linewidth = axis_lwd
       ),
 
       legend.position = legend.position,
@@ -198,8 +228,12 @@ theme_martin <- function(
   grid_theme <- switch(
     grid,
     "none" = ggplot2::theme(),
-    "y" = ggplot2::theme(panel.grid.major.y = ggplot2::element_line(color = "#D9D9D9", linewidth = 0.3)),
-    "x" = ggplot2::theme(panel.grid.major.x = ggplot2::element_line(color = "#D9D9D9", linewidth = 0.3)),
+    "y" = ggplot2::theme(
+      panel.grid.major.y = ggplot2::element_line(color = "#D9D9D9", linewidth = 0.3)
+    ),
+    "x" = ggplot2::theme(
+      panel.grid.major.x = ggplot2::element_line(color = "#D9D9D9", linewidth = 0.3)
+    ),
     "both" = ggplot2::theme(
       panel.grid.major.x = ggplot2::element_line(color = "#D9D9D9", linewidth = 0.3),
       panel.grid.major.y = ggplot2::element_line(color = "#D9D9D9", linewidth = 0.3)
