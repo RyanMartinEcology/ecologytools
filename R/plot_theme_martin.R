@@ -222,9 +222,15 @@ theme_martin <- function(
         color = rm_black
       ),
 
-      strip.background = ggplot2::element_rect(
+      strip.background = ggplot2::element_blank(),
+      strip.background.x = ggplot2::element_rect(
         fill = strip_fill,
-        color = rm_black,
+        colour = rm_black,
+        linewidth = axis_lwd
+      ),
+      strip.background.y = ggplot2::element_rect(
+        fill = strip_fill,
+        colour = rm_black,
         linewidth = axis_lwd
       ),
 
