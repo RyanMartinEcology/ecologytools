@@ -2,28 +2,53 @@
 % Please edit documentation in R/vrml.R
 \name{vrml}
 \alias{vrml}
-\title{Vector ruggedness of local relief}
+\title{Vector ruggedness of local relief (VRML)}
 \usage{
 vrml(x, s)
 }
 \arguments{
-\item{x}{A \code{terra::SpatRaster} DEM.}
+\item{x}{A \code{terra::SpatRaster} representing a digital elevation model (DEM).}
 
 \item{s}{Odd integer giving the focal window size.}
 }
 \value{
-A \code{terra::SpatRaster} of vector ruggedness values.
+A \code{terra::SpatRaster} of vector ruggedness values representing
+local-scale terrain heterogeneity.
 }
 \description{
-Calculates a smoothed DEM, subtracts the original DEM to isolate local
-topographic variation, and then computes vector ruggedness measure on the
-residual surface.
+Computes a local-relief version of the vector ruggedness measure (VRM)
+by first removing broad-scale topography and then quantifying fine-scale
+terrain heterogeneity.
 }
 \details{
-The DEM is first smoothed with \code{terra::focal()} using a mean filter of size
-\code{s}. The smoothed surface is then subtracted from the original DEM to isolate
-local topographic variation. Vector ruggedness measure is then calculated on
-that residual raster using \code{spatialEco::vrm()}.
+The standard vector ruggedness measure (VRM; Sappington et al. 2007)
+quantifies terrain ruggedness as the three-dimensional dispersion of
+vectors orthogonal to the terrain surface, integrating variation in both
+slope and aspect. This produces a dimensionless measure of surface
+heterogeneity that is less correlated with slope than traditional
+ruggedness indices.
+
+The \code{vrml()} function modifies this approach by first smoothing the DEM
+using a focal mean filter and subtracting the original DEM. This isolates
+fine-scale (local) topographic variation by removing broad-scale elevation
+trends. Vector ruggedness is then computed on this residual surface using
+\code{spatialEco::vrm()}.
+
+As a result:
+\itemize{
+\item \code{spatialEco::vrm()} measures total terrain heterogeneity across scales
+present in the DEM.
+\item \code{vrml()} emphasizes \emph{local relief} by removing low-frequency structure
+(e.g., large slopes or elevational gradients) prior to calculating
+ruggedness.
+}
+
+This distinction is important because VRM captures variation in slope and
+aspect independent of overall gradient, allowing ruggedness and slope to
+be treated as separate ecological predictors. By
+applying VRM to a detrended surface, \code{vrml()} further isolates microtopographic
+complexity that may be more relevant to processes operating at finer spatial
+scales (e.g., movement constraints, microhabitat selection).
 }
 \examples{
 \dontrun{
@@ -47,4 +72,11 @@ out <- vrml(r, s = 5)
 plot(out)
 }
 
+}
+\references{
+Sappington, J. M., K. M. Longshore, and D. B. Thompson. 2007.
+Quantifying landscape ruggedness for animal habitat analysis:
+a case study using bighorn sheep in the Mojave Desert.
+\emph{Journal of Wildlife Management} 71:1419–1426.
+https://doi.org/10.2193/2005-723
 }
