@@ -14,7 +14,7 @@ devtools::install_github("RyanMartinEcology/ecologytools")
 library(ecologytools)
 ```
 
-# Examples 
+## Plot Utility Examples 
 
 ```r
 library(ggplot2)
@@ -82,4 +82,30 @@ ggplot(df_facet, aes(x, y)) +
   geom_line(color = "#253494", linewidth = 1) +
   facet_wrap(~group) +
   theme_martin()
+```
+## Spatial utilities
+
+### Distance to escape terrain
+
+```r
+library(terra)
+library(ecologytools)
+
+# Create a smooth synthetic elevation surface
+r <- rast(nrows = 100, ncols = 100, xmin = 0, xmax = 100, ymin = 0, ymax = 100)
+
+xy <- as.data.frame(crds(r))
+z <- with(xy,
+  800 +
+    250 * exp(-((x - 30)^2 + (y - 35)^2) / 250) +
+    180 * exp(-((x - 70)^2 + (y - 65)^2) / 180) -
+    120 * exp(-((x - 55)^2 + (y - 45)^2) / 120) +
+    60 * sin(x / 8) * cos(y / 10)
+)
+
+values(r) <- z
+
+d <- dist_escape(r, escape_slope = 65)
+
+plot(d, main = "Distance to escape terrain")
 ```
