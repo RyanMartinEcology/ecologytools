@@ -13,7 +13,8 @@ Imports:
     ggplot2,
     ragg,
     showtext,
-    grid
+    grid,
+    terra
 Suggests:
     ggtext,
     patchwork
