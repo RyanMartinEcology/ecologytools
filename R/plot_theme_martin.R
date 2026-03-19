@@ -218,16 +218,24 @@ theme_martin <- function(
       strip.text = ggplot2::element_text(
         family = font,
         face = "bold",
-        size = 16,
-        color = rm_black
+        size = 12,
+        color = rm_black,
+        margin = ggplot2::margin(t = 4, r = 4, b = 4, l = 4)
       ),
 
-      strip.background = ggplot2::element_rect(
+      strip.background = ggplot2::element_blank(),
+      strip.background.x = ggplot2::element_rect(
         fill = strip_fill,
         colour = rm_black,
-        linewidth = axis_lwd
+        linewidth = axis_lwd,
+        linejoin = "mitre"
       ),
-
+      strip.background.y = ggplot2::element_rect(
+        fill = strip_fill,
+        colour = rm_black,
+        linewidth = axis_lwd,
+        linejoin = "mitre"
+      ),
 
       legend.title = ggplot2::element_text(
         family = font,
@@ -257,7 +265,8 @@ theme_martin <- function(
       panel.border = ggplot2::element_rect(
         color = rm_black,
         fill = NA,
-        linewidth = axis_lwd
+        linewidth = axis_lwd,
+        linejoin = "mitre"
       ),
 
       legend.position = legend.position,
