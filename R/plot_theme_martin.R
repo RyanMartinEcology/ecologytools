@@ -159,7 +159,7 @@ theme_martin <- function(
 
       plot.title = ggplot2::element_text(
         family = font,
-        face = fontface,
+        face = 'plain',
         size = 16,
         hjust = 0,
         vjust = 2,
@@ -186,7 +186,7 @@ theme_martin <- function(
 
       axis.title = ggplot2::element_text(
         family = font,
-        face = fontface,
+        face = 'plain',
         size = 16,
         hjust = 0.5,
         color = rm_black
@@ -198,7 +198,7 @@ theme_martin <- function(
 
       axis.text.x = ggplot2::element_text(
         family = font,
-        face = fontface,
+        face = 'plain',
         size = 11,
         angle = axis.text.x.angle,
         hjust = hjust_val,
@@ -209,7 +209,7 @@ theme_martin <- function(
 
       axis.text.y = ggplot2::element_text(
         family = font,
-        face = fontface,
+        face = 'plain',
         size = 11,
         vjust = 0,
         margin = ggplot2::margin(r = 3),
