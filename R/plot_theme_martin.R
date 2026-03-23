@@ -107,13 +107,13 @@ theme_martin <- function(
     "offwhite" = "#FCFBF7",
     "white" = "white"
   )
-
-  strip_fill <- switch(
-    background,
-    "transparent" = "grey92",
-    "offwhite" = "#F2EFE8",
-    "white" = "grey92"
-  )
+  #
+  # strip_fill <- switch(
+  #   background,
+  #   "transparent" = "grey92",
+  #   "offwhite" = "#F2EFE8",
+  #   "white" = "grey92"
+  # )
 
   hjust_val <- if (axis.text.x.angle == 0) 0.5 else 1
   vjust_val <- if (axis.text.x.angle == 0) 0.5 else 1
@@ -229,14 +229,16 @@ theme_martin <- function(
       # strip.switch.pad.wrap = grid::unit(0, "pt"),
       # strip.switch.pad.grid = grid::unit(0, "pt"),
       # strip.background = ggplot2::element_blank(),
+
       strip.background.x = ggplot2::element_rect(
-        fill = NA,
+        fill = 'grey90',
         colour = rm_black,
         linewidth = 0.7,
         linejoin = "bevel"
       ),
+
       strip.background.y = ggplot2::element_rect(
-        fill = NA,
+        fill = 'grey90',
         colour = rm_black,
         linewidth = 1,
         linejoin = "bevel"
