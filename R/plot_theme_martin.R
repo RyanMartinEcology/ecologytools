@@ -354,6 +354,12 @@ theme_martin <- function(
     ))
   }
 
+  if (fill == "gradient_ribbon") {
+    scales <- c(scales, list(
+      ggplot2::scale_fill_gradientn(colors = gradient_ribbon, name = legend.title)
+    ))
+  }
+
   if (fill == "spectral") {
     scales <- c(scales, list(
       ggplot2::scale_fill_brewer(
