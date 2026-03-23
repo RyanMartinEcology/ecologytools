@@ -51,7 +51,7 @@
 #' @export
 
 theme_martin <- function(
-    font = "serif",
+    font = "sans serif",
     fontface = "plain",
     legend.title = "Legend Title",
     legend.ncol = 1,
@@ -64,11 +64,13 @@ theme_martin <- function(
     color = c("discrete",
               "gradient_earth",
               "gradient_earth_discrete",
+              "gradient_ribbon",
               "spectral",
               "none"),
     fill = c("discrete",
              "gradient_earth",
              "gradient_earth_discrete",
+             "gradient_ribbon",
              "spectral",
              "none"),
     grid = c("none",
@@ -315,6 +317,12 @@ theme_martin <- function(
   if (color == "gradient_earth_discrete") {
     scales <- c(scales, list(
       ggplot2::scale_color_manual(values = gradient_earth, name = legend.title)
+    ))
+  }
+
+  if (color == "gradient_ribbon") {
+    scales <- c(scales, list(
+      ggplot2::scale_color_manual(values = gradient_ribbon, name = legend.title)
     ))
   }
 

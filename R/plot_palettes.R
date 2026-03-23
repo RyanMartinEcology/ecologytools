@@ -32,6 +32,13 @@ gradient_earth <- c(
   "#7F3F0F"
 )
 
+# gradient_ribbon
+gradient_ribbon <-
+  c('#00010DFF',
+    '#032CA6FF',
+    '#034AA6FF',
+    '#035AA6FF',
+    '#93ABBFFF')
 # Internal styling constants used for reference lines and text.
 rm_indigo <- "#253494"
 rm_black  <- "#1A1A1A"

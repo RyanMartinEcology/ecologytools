@@ -5,14 +5,16 @@
 \title{Custom ggplot2 theme for ecological figures}
 \usage{
 theme_martin(
-  font = "serif",
+  font = "sans serif",
   fontface = "plain",
   legend.title = "Legend Title",
   legend.ncol = 1,
   legend.position = c("right", "left", "top", "bottom", "none"),
   axis.text.x.angle = 0,
-  color = c("discrete", "gradient_earth", "gradient_earth_discrete", "spectral", "none"),
-  fill = c("discrete", "gradient_earth", "gradient_earth_discrete", "spectral", "none"),
+  color = c("discrete", "gradient_earth", "gradient_earth_discrete", "gradient_ribbon",
+    "spectral", "none"),
+  fill = c("discrete", "gradient_earth", "gradient_earth_discrete", "gradient_ribbon",
+    "spectral", "none"),
   grid = c("none", "y", "x", "both"),
   tight_axes = FALSE,
   background = c("white", "offwhite", "transparent"),
