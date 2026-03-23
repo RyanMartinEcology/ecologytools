@@ -19,16 +19,10 @@ rm_discrete <- c(
 # Continuous/discrete earth-toned gradient palette.
 gradient_earth <- c(
   "#1B9E3C",
-  "#2A9A35",
-  "#3A9530",
   "#4A902B",
-  "#5B8A27",
   "#6C8423",
-  "#7C7D20",
   "#8C761D",
-  "#9C6E1B",
   "#AC6618",
-  "#9A5314",
   "#7F3F0F"
 )
 
