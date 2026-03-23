@@ -52,7 +52,7 @@
 
 theme_martin <- function(
     font = "serif",
-    fontface = "bold",
+    fontface = "plain",
     legend.title = "Legend Title",
     legend.ncol = 1,
     legend.position = c("right",
@@ -126,7 +126,7 @@ theme_martin <- function(
     "text",
     list(
       family = font,
-      fontface = "bold",
+      fontface = "plain",
       colour = rm_black
     )
   )
@@ -135,7 +135,7 @@ theme_martin <- function(
     "label",
     list(
       family = font,
-      fontface = "bold",
+      fontface = "plain",
       colour = rm_black
     )
   )
@@ -186,7 +186,7 @@ theme_martin <- function(
 
       axis.title = ggplot2::element_text(
         family = font,
-        face = "bold",
+        face = fontface,
         size = 16,
         hjust = 0.5,
         color = rm_black
@@ -198,7 +198,7 @@ theme_martin <- function(
 
       axis.text.x = ggplot2::element_text(
         family = font,
-        face = "bold",
+        face = fontface,
         size = 11,
         angle = axis.text.x.angle,
         hjust = hjust_val,
@@ -209,37 +209,40 @@ theme_martin <- function(
 
       axis.text.y = ggplot2::element_text(
         family = font,
-        face = "bold",
+        face = fontface,
         size = 11,
+        vjust = 0,
         margin = ggplot2::margin(r = 3),
         color = rm_black
       ),
 
       strip.text = ggplot2::element_text(
         family = font,
-        face = "bold",
+        face = fontface,
         size = 12,
         color = rm_black,
         margin = ggplot2::margin(t = 4, r = 4, b = 4, l = 4)
       ),
-
-      strip.background = ggplot2::element_blank(),
+      # strip.placement = "outside",
+      # strip.switch.pad.wrap = grid::unit(0, "pt"),
+      # strip.switch.pad.grid = grid::unit(0, "pt"),
+      # strip.background = ggplot2::element_blank(),
       strip.background.x = ggplot2::element_rect(
-        fill = strip_fill,
+        fill = NA,
         colour = rm_black,
-        linewidth = axis_lwd,
-        linejoin = "mitre"
+        linewidth = 0.7,
+        linejoin = "bevel"
       ),
       strip.background.y = ggplot2::element_rect(
-        fill = strip_fill,
+        fill = NA,
         colour = rm_black,
-        linewidth = axis_lwd,
-        linejoin = "mitre"
+        linewidth = 1,
+        linejoin = "bevel"
       ),
 
       legend.title = ggplot2::element_text(
         family = font,
-        face = "bold",
+        face = fontface,
         size = 11,
         hjust = 0.5,
         color = rm_black
@@ -252,7 +255,6 @@ theme_martin <- function(
         color = rm_black
       ),
 
-      axis.line = ggplot2::element_blank(),
 
       axis.ticks = ggplot2::element_line(
         color = rm_black,
@@ -262,8 +264,9 @@ theme_martin <- function(
       panel.border = ggplot2::element_rect(
         color = rm_black,
         fill = NA,
-        linewidth = axis_lwd,
-        linejoin = "mitre"
+        linewidth = 0.7,
+        linejoin = "mitre",
+        margin_auto(t = 0, r = t, b = t, l = r, unit = "pt")
       ),
 
       legend.position = legend.position,

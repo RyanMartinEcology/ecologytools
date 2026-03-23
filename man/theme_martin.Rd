@@ -6,7 +6,7 @@
 \usage{
 theme_martin(
   font = "serif",
-  fontface = "bold",
+  fontface = "plain",
   legend.title = "Legend Title",
   legend.ncol = 1,
   legend.position = c("right", "left", "top", "bottom", "none"),
