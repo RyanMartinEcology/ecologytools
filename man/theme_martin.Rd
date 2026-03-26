@@ -2,94 +2,45 @@
 % Please edit documentation in R/plot_theme_martin.R
 \name{theme_martin}
 \alias{theme_martin}
-\title{Custom ggplot2 theme for ecological figures}
+\title{Martin theme}
 \usage{
 theme_martin(
-  font = "sans serif",
-  fontface = "plain",
-  legend.title = "Legend Title",
-  legend.ncol = 1,
-  legend.position = c("right", "left", "top", "bottom", "none"),
-  axis.text.x.angle = 0,
-  color = c("discrete", "gradient_earth", "gradient_earth_discrete", "gradient_ribbon",
-    "spectral", "none"),
-  fill = c("discrete", "gradient_earth", "gradient_earth_discrete", "gradient_ribbon",
-    "spectral", "none"),
-  grid = c("none", "y", "x", "both"),
-  tight_axes = FALSE,
-  background = c("white", "offwhite", "transparent"),
-  equal_axes = FALSE,
-  one_to_one_line = FALSE,
-  hline = NULL,
-  vline = NULL,
-  shade = NULL
+  base_size = 12,
+  base_family = "Libre Caslon Text",
+  palette = c("discrete", "cont_grad", "grad_earth", "ribbon_forest", "ribbon_teal"),
+  palette_aes = c("fill", "color", "both"),
+  legend_title = NULL,
+  facet_fill = c("sand", "teal", "none"),
+  grid = c("off", "x", "y", "xy"),
+  full_box = FALSE,
+  axis_text_x_angle = 0
 )
 }
 \arguments{
-\item{font}{Character string giving the base font family.}
+\item{base_size}{Base font size.}
 
-\item{fontface}{Character string giving the font face for the plot title.}
+\item{base_family}{Base font family.}
 
-\item{legend.title}{Character string or expression used as the legend title.}
+\item{palette}{Palette choice. One of \code{"discrete"}, \code{"cont_grad"},
+\code{"grad_earth"}, \code{"ribbon_forest"}, or \code{"ribbon_teal"}.}
 
-\item{legend.ncol}{Number of legend columns when the legend is on the left or right.}
+\item{palette_aes}{Aesthetic to which the palette is applied. One of
+\code{"fill"}, \code{"color"}, or \code{"both"}.}
 
-\item{legend.position}{Legend position. One of \code{"right"}, \code{"left"}, \code{"top"}, \code{"bottom"}, or \code{"none"}.}
+\item{legend_title}{Optional legend title.}
 
-\item{axis.text.x.angle}{Angle of x-axis text in degrees.}
+\item{facet_fill}{Facet strip fill. One of \code{"sand"}, \code{"teal"}, or \code{"none"}.}
 
-\item{color}{Color scale option. One of \code{"discrete"}, \code{"gradient_earth"}, \code{"gradient_earth_discrete"}, \code{"spectral"}, or \code{"none"}.}
+\item{grid}{Gridline display. One of \code{"off"}, \code{"x"}, \code{"y"}, or \code{"xy"}.}
 
-\item{fill}{Fill scale option. One of \code{"discrete"}, \code{"gradient_earth"}, \code{"gradient_earth_discrete"}, \code{"spectral"}, or \code{"none"}.}
+\item{full_box}{Logical. If \code{TRUE}, draw top and right axis lines to complete
+the panel box.}
 
-\item{grid}{Grid line option. One of \code{"none"}, \code{"y"}, \code{"x"}, or \code{"both"}.}
-
-\item{tight_axes}{Logical; if \code{TRUE}, removes padding between the data and axes.}
-
-\item{background}{Background style. One of \code{"white"}, \code{"offwhite"}, or \code{"transparent"}.}
-
-\item{equal_axes}{Logical; if \code{TRUE}, uses equal scaling on both axes.}
-
-\item{one_to_one_line}{Logical; if \code{TRUE}, adds a one-to-one reference line.}
-
-\item{hline}{Optional numeric value giving a horizontal reference line position.}
-
-\item{vline}{Optional numeric value giving a vertical reference line position.}
-
-\item{shade}{Optional numeric vector of even length. Each consecutive pair defines
-a shaded x-axis interval spanning the full y-range of the plot.}
+\item{axis_text_x_angle}{Rotation angle for x-axis text labels.}
 }
 \value{
-A list of ggplot2 theme, scale, guide, coordinate, annotation, and
-reference-line components that can be added to a ggplot object.
+A list of ggplot2 components.
 }
 \description{
-Publication-style ggplot2 theme for ecology.
-}
-\details{
-A custom ggplot2 theme and helper layer bundle for producing
-publication-style ecological figures. The function can control
-legend layout, background style, grid lines, equal axis scaling,
-reference lines, color and fill scales, and shaded x-axis regions.
-}
-\examples{
-library(ggplot2)
-
-dat <- data.frame(
-  x = rep(1:10, 2),
-  y = c(1:10, 2:11),
-  group = rep(c("A", "B"), each = 10)
-)
-
-ggplot(dat, aes(x, y, color = group)) +
-  geom_line() +
-  theme_martin()
-
-ggplot(dat, aes(x, y, color = group)) +
-  geom_line() +
-  theme_martin(
-    legend.position = "top",
-    shade = c(3, 5, 7, 8)
-  )
-
+A clean publication-style ggplot2 theme with integrated palette support.
 }

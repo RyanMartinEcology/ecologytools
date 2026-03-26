@@ -1,468 +1,190 @@
-#' Custom ggplot2 theme for ecological figures
+#' Martin theme
 #'
-#' Publication-style ggplot2 theme for ecology.
+#' A clean publication-style ggplot2 theme with integrated palette support.
 #'
-#' A custom ggplot2 theme and helper layer bundle for producing
-#' publication-style ecological figures. The function can control
-#' legend layout, background style, grid lines, equal axis scaling,
-#' reference lines, color and fill scales, and shaded x-axis regions.
+#' @param base_size Base font size.
+#' @param base_family Base font family.
+#' @param palette Palette choice. One of `"discrete"`, `"cont_grad"`,
+#'   `"grad_earth"`, `"ribbon_forest"`, or `"ribbon_teal"`.
+#' @param palette_aes Aesthetic to which the palette is applied. One of
+#'   `"fill"`, `"color"`, or `"both"`.
+#' @param legend_title Optional legend title.
+#' @param facet_fill Facet strip fill. One of `"sand"`, `"teal"`, or `"none"`.
+#' @param grid Gridline display. One of `"off"`, `"x"`, `"y"`, or `"xy"`.
+#' @param full_box Logical. If `TRUE`, draw top and right axis lines to complete
+#'   the panel box.
+#' @param axis_text_x_angle Rotation angle for x-axis text labels.
 #'
-#' @param font Character string giving the base font family.
-#' @param fontface Character string giving the font face for the plot title.
-#' @param legend.title Character string or expression used as the legend title.
-#' @param legend.ncol Number of legend columns when the legend is on the left or right.
-#' @param legend.position Legend position. One of `"right"`, `"left"`, `"top"`, `"bottom"`, or `"none"`.
-#' @param axis.text.x.angle Angle of x-axis text in degrees.
-#' @param color Color scale option. One of `"discrete"`, `"gradient_earth"`, `"gradient_earth_discrete"`, `"spectral"`, or `"none"`.
-#' @param fill Fill scale option. One of `"discrete"`, `"gradient_earth"`, `"gradient_earth_discrete"`, `"spectral"`, or `"none"`.
-#' @param grid Grid line option. One of `"none"`, `"y"`, `"x"`, or `"both"`.
-#' @param tight_axes Logical; if `TRUE`, removes padding between the data and axes.
-#' @param background Background style. One of `"white"`, `"offwhite"`, or `"transparent"`.
-#' @param equal_axes Logical; if `TRUE`, uses equal scaling on both axes.
-#' @param one_to_one_line Logical; if `TRUE`, adds a one-to-one reference line.
-#' @param hline Optional numeric value giving a horizontal reference line position.
-#' @param vline Optional numeric value giving a vertical reference line position.
-#' @param shade Optional numeric vector of even length. Each consecutive pair defines
-#' a shaded x-axis interval spanning the full y-range of the plot.
-#'
-#' @return A list of ggplot2 theme, scale, guide, coordinate, annotation, and
-#' reference-line components that can be added to a ggplot object.
-#'
-#' @examples
-#' library(ggplot2)
-#'
-#' dat <- data.frame(
-#'   x = rep(1:10, 2),
-#'   y = c(1:10, 2:11),
-#'   group = rep(c("A", "B"), each = 10)
-#' )
-#'
-#' ggplot(dat, aes(x, y, color = group)) +
-#'   geom_line() +
-#'   theme_martin()
-#'
-#' ggplot(dat, aes(x, y, color = group)) +
-#'   geom_line() +
-#'   theme_martin(
-#'     legend.position = "top",
-#'     shade = c(3, 5, 7, 8)
-#'   )
-#'
+#' @return A list of ggplot2 components.
 #' @export
-
 theme_martin <- function(
-    font = "sans serif",
-    fontface = "plain",
-    legend.title = "Legend Title",
-    legend.ncol = 1,
-    legend.position = c("right",
-                        "left",
-                        "top",
-                        "bottom",
-                        "none"),
-    axis.text.x.angle = 0,
-    color = c("discrete",
-              "gradient_earth",
-              "gradient_earth_discrete",
-              "gradient_ribbon",
-              "spectral",
-              "none"),
-    fill = c("discrete",
-             "gradient_earth",
-             "gradient_earth_discrete",
-             "gradient_ribbon",
-             "spectral",
-             "none"),
-    grid = c("none",
-             "y",
-             "x",
-             "both"),
-    tight_axes = FALSE,
-    background = c("white",
-                   "offwhite",
-                   "transparent"),
-    equal_axes = FALSE,
-    one_to_one_line = FALSE,
-    hline = NULL,
-    vline = NULL,
-    shade = NULL
+    base_size = 12,
+    base_family = "Libre Caslon Text",
+    palette = c("discrete", "cont_grad", "grad_earth", "ribbon_forest", "ribbon_teal"),
+    palette_aes = c("fill", "color", "both"),
+    legend_title = NULL,
+    facet_fill = c("sand", "teal", "none"),
+    grid = c("off", "x", "y", "xy"),
+    full_box = FALSE,
+    axis_text_x_angle = 0
 ) {
-  color <- match.arg(color)
-  fill <- match.arg(fill)
+  palette <- match.arg(palette)
+  palette_aes <- match.arg(palette_aes)
+  facet_fill <- match.arg(facet_fill)
   grid <- match.arg(grid)
-  legend.position <- match.arg(legend.position)
-  background <- match.arg(background)
 
-  if (!is.null(shade)) {
-    if (!is.numeric(shade) || length(shade) %% 2 != 0) {
-      stop("shade must be NULL or a numeric vector with even length.")
+  base_cols <- pal_base()
+
+  facet_col <- switch(
+    facet_fill,
+    sand = pal_facet("sand"),
+    teal = pal_facet("teal"),
+    none = base_cols$white
+  )
+
+  pal_vals <- switch(
+    palette,
+    discrete = pal_discrete(),
+    cont_grad = pal_gradient("cont"),
+    grad_earth = pal_gradient("earth"),
+    ribbon_forest = unname(pal_ribbon("forest")),
+    ribbon_teal = unname(pal_ribbon("teal"))
+  )
+
+  make_scale_layers <- function(values, aes, continuous) {
+    if (continuous) {
+      if (aes == "fill") {
+        return(list(ggplot2::scale_fill_gradientn(colors = values)))
+      }
+      if (aes == "color") {
+        return(list(ggplot2::scale_color_gradientn(colors = values)))
+      }
+      return(list(
+        ggplot2::scale_fill_gradientn(colors = values),
+        ggplot2::scale_color_gradientn(colors = values)
+      ))
     }
+
+    if (aes == "fill") {
+      return(list(ggplot2::scale_fill_manual(values = values)))
+    }
+    if (aes == "color") {
+      return(list(ggplot2::scale_color_manual(values = values)))
+    }
+    list(
+      ggplot2::scale_fill_manual(values = values),
+      ggplot2::scale_color_manual(values = values)
+    )
   }
 
-  axis_lwd <- 1
-
-  bg_fill <- switch(
-    background,
-    "transparent" = NA,
-    "offwhite" = "#FCFBF7",
-    "white" = "white"
+  scale_layers <- make_scale_layers(
+    values = pal_vals,
+    aes = palette_aes,
+    continuous = palette %in% c("cont_grad", "grad_earth")
   )
-  #
-  # strip_fill <- switch(
-  #   background,
-  #   "transparent" = "grey92",
-  #   "offwhite" = "#F2EFE8",
-  #   "white" = "grey92"
-  # )
 
-  hjust_val <- if (axis.text.x.angle == 0) 0.5 else 1
-  vjust_val <- if (axis.text.x.angle == 0) 0.5 else 1
-
-  legend_direction <- if (legend.position %in% c("top", "bottom")) {
-    "horizontal"
+  legend_layer <- if (is.null(legend_title)) {
+    list()
+  } else if (palette_aes == "fill") {
+    list(ggplot2::labs(fill = legend_title))
+  } else if (palette_aes == "color") {
+    list(ggplot2::labs(color = legend_title))
   } else {
-    "vertical"
+    list(ggplot2::labs(fill = legend_title, color = legend_title))
   }
 
-  ggplot2::update_geom_defaults(
-    "text",
-    list(
-      family = font,
-      fontface = "plain",
-      colour = rm_black
-    )
+  show_grid_x <- grid %in% c("x", "xy")
+  show_grid_y <- grid %in% c("y", "xy")
+
+  x_hjust <- if (axis_text_x_angle == 0) 0.5 else 1
+  x_vjust <- if (axis_text_x_angle == 0) 0.5 else 1
+
+  theme_layer <- list(
+    ggplot2::theme_minimal(
+      base_size = base_size,
+      base_family = base_family
+    ) +
+      ggplot2::theme(
+        plot.title = ggplot2::element_text(
+          size = base_size + 3,
+          face = "bold",
+          hjust = 0,
+          colour = base_cols$black
+        ),
+        plot.subtitle = ggplot2::element_text(
+          size = base_size - 1,
+          face = "italic",
+          hjust = 0,
+          colour = base_cols$black
+        ),
+        legend.title = ggplot2::element_text(
+          colour = base_cols$black,
+          face = "plain",
+          hjust = 0.5
+        ),
+        legend.title.align = 0.5,
+        legend.text = ggplot2::element_text(
+          colour = base_cols$black
+        ),
+        axis.text.x = ggplot2::element_text(
+          colour = base_cols$black,
+          angle = axis_text_x_angle,
+          hjust = x_hjust,
+          vjust = x_vjust
+        ),
+        axis.text.y = ggplot2::element_text(
+          colour = base_cols$black
+        ),
+        axis.title = ggplot2::element_text(
+          colour = base_cols$black
+        ),
+        axis.line = ggplot2::element_line(
+          colour = base_cols$black,
+          linewidth = 0.7
+        ),
+        axis.line.x.top = if (full_box) {
+          ggplot2::element_line(colour = base_cols$black, linewidth = 0.7)
+        } else {
+          ggplot2::element_blank()
+        },
+        axis.line.y.right = if (full_box) {
+          ggplot2::element_line(colour = base_cols$black, linewidth = 0.7)
+        } else {
+          ggplot2::element_blank()
+        },
+        axis.ticks = ggplot2::element_line(
+          colour = base_cols$black,
+          linewidth = 0.7
+        ),
+        axis.ticks.length = grid::unit(3, "pt"),
+        panel.grid.minor = ggplot2::element_blank(),
+        panel.grid.major.x = if (show_grid_x) {
+          ggplot2::element_line(
+            colour = base_cols$grid,
+            linewidth = 0.4
+          )
+        } else {
+          ggplot2::element_blank()
+        },
+        panel.grid.major.y = if (show_grid_y) {
+          ggplot2::element_line(
+            colour = base_cols$grid,
+            linewidth = 0.4
+          )
+        } else {
+          ggplot2::element_blank()
+        },
+        panel.spacing = grid::unit(1, "lines"),
+        strip.background = ggplot2::element_rect(
+          fill = facet_col,
+          colour = NA
+        ),
+        strip.text = ggplot2::element_text(
+          colour = base_cols$black,
+          face = "bold"
+        )
+      )
   )
 
-  ggplot2::update_geom_defaults(
-    "label",
-    list(
-      family = font,
-      fontface = "plain",
-      colour = rm_black
-    )
-  )
-
-  color_guide <- if (legend.position %in% c("top", "bottom")) {
-    ggplot2::guide_legend(nrow = 1, byrow = TRUE)
-  } else {
-    ggplot2::guide_legend(ncol = legend.ncol, byrow = TRUE)
-  }
-
-  fill_guide <- if (legend.position %in% c("top", "bottom")) {
-    ggplot2::guide_legend(nrow = 1, byrow = TRUE)
-  } else {
-    ggplot2::guide_legend(ncol = legend.ncol, byrow = TRUE)
-  }
-
-  base_theme <- ggplot2::theme_classic() +
-    ggplot2::theme(
-      panel.grid.major = ggplot2::element_blank(),
-      panel.grid.minor = ggplot2::element_blank(),
-
-      plot.title = ggplot2::element_text(
-        family = font,
-        face = 'plain',
-        size = 16,
-        hjust = 0,
-        vjust = 2,
-        color = rm_black
-      ),
-
-      plot.subtitle = ggplot2::element_text(
-        family = font,
-        face = "plain",
-        size = 12,
-        hjust = 0,
-        vjust = 2,
-        color = rm_black
-      ),
-
-      plot.caption = ggplot2::element_text(
-        family = font,
-        face = "italic",
-        size = 10,
-        hjust = 0,
-        margin = ggplot2::margin(t = 10),
-        color = rm_black
-      ),
-
-      axis.title = ggplot2::element_text(
-        family = font,
-        face = 'plain',
-        size = 16,
-        hjust = 0.5,
-        color = rm_black
-      ),
-
-      axis.title.x = ggplot2::element_text(
-        margin = ggplot2::margin(t = 8)
-      ),
-
-      axis.text.x = ggplot2::element_text(
-        family = font,
-        face = 'plain',
-        size = 11,
-        angle = axis.text.x.angle,
-        hjust = hjust_val,
-        vjust = vjust_val,
-        margin = ggplot2::margin(t = 3),
-        color = rm_black
-      ),
-
-      axis.text.y = ggplot2::element_text(
-        family = font,
-        face = 'plain',
-        size = 11,
-        vjust = 0,
-        margin = ggplot2::margin(r = 3),
-        color = rm_black
-      ),
-
-      strip.text = ggplot2::element_text(
-        family = font,
-        face = fontface,
-        size = 12,
-        color = rm_black,
-        margin = ggplot2::margin(t = 4, r = 4, b = 4, l = 4)
-      ),
-      # strip.placement = "outside",
-      # strip.switch.pad.wrap = grid::unit(0, "pt"),
-      # strip.switch.pad.grid = grid::unit(0, "pt"),
-      # strip.background = ggplot2::element_blank(),
-
-      strip.background.x = ggplot2::element_rect(
-        fill = 'grey90',
-        colour = rm_black,
-        linewidth = 0.7,
-        linejoin = "bevel"
-      ),
-
-      strip.background.y = ggplot2::element_rect(
-        fill = 'grey90',
-        colour = rm_black,
-        linewidth = 1,
-        linejoin = "bevel"
-      ),
-
-      legend.title = ggplot2::element_text(
-        family = font,
-        face = fontface,
-        size = 11,
-        hjust = 0.5,
-        color = rm_black
-      ),
-
-      legend.text = ggplot2::element_text(
-        family = font,
-        face = "plain",
-        size = 10,
-        color = rm_black
-      ),
-
-
-      axis.ticks = ggplot2::element_line(
-        color = rm_black,
-        linewidth = axis_lwd
-      ),
-
-      panel.border = ggplot2::element_rect(
-        color = rm_black,
-        fill = NA,
-        linewidth = 0.7,
-        linejoin = "mitre",
-        margin_auto(t = 0, r = t, b = t, l = r, unit = "pt")
-      ),
-
-      legend.position = legend.position,
-      legend.direction = legend_direction,
-      legend.title.align = 0.5,
-      legend.key.width = grid::unit(1.2, "lines"),
-      legend.key.height = grid::unit(1.2, "lines"),
-      legend.background = ggplot2::element_blank(),
-      legend.key = ggplot2::element_rect(fill = NA, color = NA),
-
-      plot.margin = ggplot2::margin(t = 10, r = 10, b = 10, l = 10),
-
-      plot.background = ggplot2::element_rect(fill = bg_fill, color = NA),
-      panel.background = ggplot2::element_rect(fill = bg_fill, color = NA)
-    )
-
-  grid_theme <- switch(
-    grid,
-    "none" = ggplot2::theme(),
-    "y" = ggplot2::theme(
-      panel.grid.major.y = ggplot2::element_line(color = "#D9D9D9", linewidth = 0.3)
-    ),
-    "x" = ggplot2::theme(
-      panel.grid.major.x = ggplot2::element_line(color = "#D9D9D9", linewidth = 0.3)
-    ),
-    "both" = ggplot2::theme(
-      panel.grid.major.x = ggplot2::element_line(color = "#D9D9D9", linewidth = 0.3),
-      panel.grid.major.y = ggplot2::element_line(color = "#D9D9D9", linewidth = 0.3)
-    )
-  )
-
-  scales <- list()
-
-  if (color == "discrete") {
-    scales <- c(scales, list(
-      ggplot2::scale_color_manual(values = rm_discrete, name = legend.title)
-    ))
-  }
-
-  if (color == "gradient_earth") {
-    scales <- c(scales, list(
-      ggplot2::scale_color_gradientn(colors = gradient_earth, name = legend.title)
-    ))
-  }
-
-  if (color == "gradient_earth_discrete") {
-    scales <- c(scales, list(
-      ggplot2::scale_color_manual(values = gradient_earth, name = legend.title)
-    ))
-  }
-
-  if (color == "gradient_ribbon") {
-    scales <- c(scales, list(
-      ggplot2::scale_color_manual(values = gradient_ribbon, name = legend.title)
-    ))
-  }
-
-  if (color == "spectral") {
-    scales <- c(scales, list(
-      ggplot2::scale_color_brewer(
-        palette = "Spectral",
-        direction = -1,
-        name = legend.title
-      )
-    ))
-  }
-
-  if (fill == "discrete") {
-    scales <- c(scales, list(
-      ggplot2::scale_fill_manual(values = rm_discrete, name = legend.title)
-    ))
-  }
-
-  if (fill == "gradient_earth") {
-    scales <- c(scales, list(
-      ggplot2::scale_fill_gradientn(colors = gradient_earth, name = legend.title)
-    ))
-  }
-
-  if (fill == "gradient_earth_discrete") {
-    scales <- c(scales, list(
-      ggplot2::scale_fill_manual(values = gradient_earth, name = legend.title)
-    ))
-  }
-
-  if (fill == "gradient_ribbon") {
-    scales <- c(scales, list(
-      ggplot2::scale_fill_gradientn(colors = gradient_ribbon, name = legend.title)
-    ))
-  }
-
-  if (fill == "spectral") {
-    scales <- c(scales, list(
-      ggplot2::scale_fill_brewer(
-        palette = "Spectral",
-        direction = -1,
-        name = legend.title
-      )
-    ))
-  }
-
-  guide_layer <- list(
-    ggplot2::guides(
-      color = color_guide,
-      fill = fill_guide
-    )
-  )
-
-  coord_layer <- if (equal_axes) {
-    list(
-      ggplot2::coord_fixed(
-        ratio = 1,
-        expand = !tight_axes,
-        clip = "off"
-      )
-    )
-  } else if (tight_axes) {
-    list(
-      ggplot2::coord_cartesian(
-        expand = FALSE,
-        clip = "off"
-      )
-    )
-  } else {
-    list(
-      ggplot2::coord_cartesian(clip = "off")
-    )
-  }
-
-  shade_layer <- list()
-
-  if (!is.null(shade)) {
-    shade_mat <- matrix(shade, ncol = 2, byrow = TRUE)
-
-    shade_layer <- lapply(seq_len(nrow(shade_mat)), function(i) {
-      xvals <- sort(shade_mat[i, ])
-
-      ggplot2::annotate(
-        "rect",
-        xmin = xvals[1],
-        xmax = xvals[2],
-        ymin = -Inf,
-        ymax = Inf,
-        fill = "grey70",
-        alpha = 0.25
-      )
-    })
-  }
-
-  ref_layers <- list()
-
-  if (isTRUE(one_to_one_line)) {
-    ref_layers <- c(ref_layers, list(
-      ggplot2::geom_abline(
-        slope = 1,
-        intercept = 0,
-        color = rm_indigo,
-        linewidth = 0.75,
-        linetype = "dotdash",
-        inherit.aes = FALSE
-      )
-    ))
-  }
-
-  if (!is.null(hline)) {
-    ref_layers <- c(ref_layers, list(
-      ggplot2::geom_hline(
-        yintercept = hline,
-        color = rm_indigo,
-        linewidth = 0.75,
-        linetype = "dotdash"
-      )
-    ))
-  }
-
-  if (!is.null(vline)) {
-    ref_layers <- c(ref_layers, list(
-      ggplot2::geom_vline(
-        xintercept = vline,
-        color = rm_indigo,
-        linewidth = 0.75,
-        linetype = "dotdash"
-      )
-    ))
-  }
-
-  c(
-    shade_layer,
-    list(base_theme, grid_theme),
-    scales,
-    guide_layer,
-    coord_layer,
-    ref_layers
-  )
+  c(theme_layer, legend_layer, scale_layers)
 }
