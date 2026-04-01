@@ -4,6 +4,8 @@
 #' search areas from GPS data. Optionally writes outputs as KML or GPX and
 #' produces a basic plot.
 #'
+#' @importFrom rlang .data
+#'
 #' @param GPS A data frame containing columns `x`, `y`, `ID`, and `DateTime`.
 #'   `x` and `y` should be projected coordinates in the supplied `crs`.
 #'   `DateTime` must be a `POSIXct` vector.
@@ -22,8 +24,9 @@
 #' @param basic.plot Logical. If `TRUE`, draw a simple plot of search areas,
 #'   movement paths, and last locations.
 #'
-#' @return A `SpatVector` of search areas if clusters are found. If no clusters
-#'   are found, returns the point `SpatVector` with attached `clusterID`.
+#' @return A `terra::SpatVector` of search areas if clusters are found. If no
+#'   clusters are found, returns the point `SpatVector` with attached
+#'   `clusterID`.
 #'
 #' @details
 #' The function filters GPS locations to observations occurring within
@@ -63,7 +66,7 @@ sheep_cluster <- function(GPS,
                           filetype = "KML",
                           last.point = TRUE,
                           trace = TRUE,
-                          basic.plot = TRUE) {
+                          basic.plot = FALSE) {
 
   required_cols <- c("x", "y", "ID", "DateTime")
   missing_cols <- setdiff(required_cols, names(GPS))

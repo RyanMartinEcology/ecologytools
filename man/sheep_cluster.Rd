@@ -14,7 +14,7 @@ sheep_cluster(
   filetype = "KML",
   last.point = TRUE,
   trace = TRUE,
-  basic.plot = TRUE
+  basic.plot = FALSE
 )
 }
 \arguments{
@@ -46,8 +46,9 @@ individual.}
 movement paths, and last locations.}
 }
 \value{
-A \code{SpatVector} of search areas if clusters are found. If no clusters
-are found, returns the point \code{SpatVector} with attached \code{clusterID}.
+A \code{terra::SpatVector} of search areas if clusters are found. If no
+clusters are found, returns the point \code{SpatVector} with attached
+\code{clusterID}.
 }
 \description{
 Creates recent last locations, movement paths, and DBSCAN-based convex hull
