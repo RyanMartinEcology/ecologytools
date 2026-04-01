@@ -1,13 +1,13 @@
 # Installation Instructions
 
-## remotes Package
+## remotes Package Installation
 ```r
 install.packages("remotes")
 remotes::install_github("RyanMartinEcology/ecologytools")
 library(ecologytools)
 ```
 
-## devtools Package
+## devtools Package Installation
 
 ```r
 install.packages("devtools")
