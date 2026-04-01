@@ -69,6 +69,33 @@
 #'
 #' @export
 
+vrm <- function (x, s)
+{
+  if (!inherits(x, "SpatRaster"))
+    stop(deparse(substitute(x)), " must be a terra SpatRaster object")
+  if (length(s) > 2)
+    stop("Specified window exceeds 2 dimensions")
+  if (any((s%%2) == 0))
+    stop("Specified window must be odd number(s)")
+  if (length(s) == 1)
+    s = rep(s, 2)
+  vrm.fun <- function(x, y, z) {
+    sqrt((x^2) + (y^2) + (z^2))
+  }
+  f = matrix(1, s[1], s[2])
+  scale.factor <- round(s[1] * s[2], 0)
+  sa <- terra::terrain(x, v = c("slope", "aspect"), unit = "radians",
+                       neighbors = 8)
+  sin.slp <- terra::app(sa[["slope"]], fun = sin)
+  cos.slp <- terra::app(sa[["slope"]], fun = cos)
+  sin.asp <- terra::app(sa[["aspect"]], fun = sin) * sin.slp
+  cos.asp <- terra::app(sa[["aspect"]], fun = cos) * sin.slp
+  x.sum <- terra::focal(sin.asp, w = f, fun = sum)
+  y.sum <- terra::focal(cos.asp, w = f, fun = sum)
+  z.sum <- terra::focal(cos.slp, w = f, fun = sum)
+  r <- terra::lapp(c(x.sum, y.sum, z.sum), fun = vrm.fun)
+  return(1 - (r/scale.factor))
+}
 
 vrml <- function(x, s) {
   stopifnot(inherits(x, "SpatRaster"))
@@ -87,7 +114,7 @@ vrml <- function(x, s) {
 
   diff <- smooth - x
 
-  out <- spatialEco::vrm(diff, s = s)
+  out <- vrm(diff, s = s)
 
   out
 }
