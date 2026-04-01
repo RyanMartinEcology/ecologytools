@@ -7,7 +7,6 @@ Description: Provides custom functions and plotting utilities for ecological dat
 License: GPL-3
 Encoding: UTF-8
 LazyData: true
-LinkingTo: Rcpp 
 Depends: 
     R (>= 4.5.0)
 Imports:
@@ -19,15 +18,7 @@ Imports:
     dbscan,
     dplyr,
     lubridate,
-    rlang,
-    abind,
-    ncdf4,
-    Rcpp,
-    sp,
-    sf,
-    stats,
-    utils,
-    zoo
+    rlang
 Suggests:
     ggtext,
     patchwork
