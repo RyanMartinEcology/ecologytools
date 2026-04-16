@@ -45,7 +45,7 @@
 #' @seealso \code{\link[terra]{describe}}, \code{\link{force_inmemory}},
 #'   \code{\link{safe_unwrap}}
 #'
-#' @importFrom terra nlyr ncell res ext crs sources inMemory hasTime values
+#' @importFrom terra nlyr ncell res ext crs sources inMemory has.time values
 #' @export
 
 raster_summary <- function(r, name = NULL) {
@@ -68,7 +68,7 @@ raster_summary <- function(r, name = NULL) {
     crs      = crs(r, proj = TRUE),
     source   = sources(r),
     memory   = inMemory(r),
-    has_time = hasTime(r),
+    has_time = has.time(r),
     range    = val_range
   )
 
