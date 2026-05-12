@@ -1,2 +1,4 @@
 ^ecologytools\.Rproj$
 ^\.Rproj\.user$
+^\.positai$
+^\.claude$
