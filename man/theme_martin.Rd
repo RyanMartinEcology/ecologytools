@@ -5,21 +5,27 @@
 \title{Martin theme}
 \usage{
 theme_martin(
-  base_size = 12,
+  base_size = NULL,
   base_family = "Libre Caslon Text",
+  line_width = 1.1,
   palette = c("discrete", "cont_grad", "grad_earth", "ribbon_forest", "ribbon_teal"),
   palette_aes = c("fill", "color", "both"),
-  legend_title = NULL,
+  legend_position = c("right", "left", "top", "bottom"),
   facet_fill = c("sand", "teal", "none"),
   grid = c("off", "x", "y", "xy"),
   full_box = FALSE,
-  axis_text_x_angle = 0
+  axis_text_x_angle = 0,
+  publication = FALSE
 )
 }
 \arguments{
-\item{base_size}{Base font size.}
+\item{base_size}{Base font size. If \code{NULL} (the default), resolves to 10
+when \code{publication = TRUE} and 12 otherwise.}
 
 \item{base_family}{Base font family.}
+
+\item{line_width}{Width of axis lines and ticks. Gridlines are drawn at
+half this value.}
 
 \item{palette}{Palette choice. One of \code{"discrete"}, \code{"cont_grad"},
 \code{"grad_earth"}, \code{"ribbon_forest"}, or \code{"ribbon_teal"}.}
@@ -27,20 +33,27 @@ theme_martin(
 \item{palette_aes}{Aesthetic to which the palette is applied. One of
 \code{"fill"}, \code{"color"}, or \code{"both"}.}
 
-\item{legend_title}{Optional legend title.}
+\item{legend_position}{Legend position. One of \code{"right"} (default),
+\code{"left"}, \code{"top"}, or \code{"bottom"}.}
 
 \item{facet_fill}{Facet strip fill. One of \code{"sand"}, \code{"teal"}, or \code{"none"}.}
 
 \item{grid}{Gridline display. One of \code{"off"}, \code{"x"}, \code{"y"}, or \code{"xy"}.}
 
-\item{full_box}{Logical. If \code{TRUE}, draw top and right axis lines to complete
-the panel box.}
+\item{full_box}{Logical. If \code{TRUE}, draw a full rectangular panel border
+with ticks on all four sides (tick labels remain on bottom and left only).}
 
 \item{axis_text_x_angle}{Rotation angle for x-axis text labels.}
+
+\item{publication}{Logical. If \code{TRUE}, applies publication-ready defaults:
+\code{base_size} becomes 10 (unless supplied), \code{base_family} becomes
+\code{"Times New Roman"} (unless the user has changed it from the default),
+and the palette's off-black is replaced with pure black (\code{"#000000"}).}
 }
 \value{
 A list of ggplot2 components.
 }
 \description{
 A clean publication-style ggplot2 theme with integrated palette support.
+Built on \code{theme_void()} for predictable inheritance.
 }
