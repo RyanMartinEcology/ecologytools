@@ -22,35 +22,21 @@ library(ggplot2)
 library(ecologytools)
 
 #---------------------------------------
-# 1. Bar chart
-#---------------------------------------
-df_bar <- data.frame(
-  group = LETTERS[1:5],
-  value = c(10, 15, 7, 20, 12)
-)
-
-ggplot(df_bar, aes(x = group, y = value, fill = group)) +
-  geom_col() +
-  theme_martin(fill = "discrete", legend.position = "none")
-
-
-#---------------------------------------
-# 2. Scatter plot with many colors
+# 1. Scatter plot with many colors
 #---------------------------------------
 set.seed(1)
 df_point <- data.frame(
   x = rnorm(200),
   y = rnorm(200),
-  group = sample(letters[1:10], 200, replace = TRUE)
+  group = sample(letters[1:7], 200, replace = TRUE)
 )
-
 ggplot(df_point, aes(x, y, color = group)) +
   geom_point(size = 2) +
-  theme_martin(color = "discrete")
-
+  scale_color_martin("discrete") +
+  theme_martin()
 
 #---------------------------------------
-# 3. Line plot with many groups
+# 2. Line plot with a continuous gradient
 #---------------------------------------
 df_line <- data.frame(
   x = rep(1:50, 6),
@@ -62,27 +48,111 @@ df_line <- data.frame(
     cumsum(rnorm(50)),
     cumsum(rnorm(50))
   ),
-  group = rep(paste0("g", 1:6), each = 50)
+  group = rep(1:6, each = 50)
 )
-
-ggplot(df_line, aes(x, y, color = group)) +
+ggplot(df_line, aes(x, y, color = group, group = group)) +
   geom_line(linewidth = 1) +
-  theme_martin(color = "gradient_earth_discrete")
-
+  scale_color_martin("earth") +
+  theme_martin()
 
 #---------------------------------------
-# 4. Facet wrap example
+# 3. Facet wrap example
 #---------------------------------------
 df_facet <- data.frame(
   x = rep(1:20, 4),
   y = rnorm(80),
   group = rep(letters[1:4], each = 20)
 )
-
 ggplot(df_facet, aes(x, y)) +
-  geom_line(color = "#253494", linewidth = 1) +
+  geom_line(color = pal("black"), linewidth = 1) +
   facet_wrap(~group) +
   theme_martin()
+
+#---------------------------------------
+# 4. Plant functional groups
+#---------------------------------------
+df_plants <- data.frame(
+  group = factor(
+    c("grass", "shrub", "forb", "tree", "fern"),
+    levels = c("grass", "shrub", "forb", "tree", "fern")
+  ),
+  cover = c(45, 22, 18, 10, 5)
+)
+ggplot(df_plants, aes(x = group, y = cover, fill = group)) +
+  geom_col() +
+  scale_fill_martin("plants") +
+  theme_martin() +
+  theme(legend.position = "none")
+
+#---------------------------------------
+# 5. Plant phenology
+#---------------------------------------
+df_phen <- data.frame(
+  stage = factor(
+    rep(c("emergent", "flower", "fruiting", "mature", "senesced"), each = 20),
+    levels = c("emergent", "flower", "fruiting", "mature", "senesced")
+  ),
+  biomass = c(
+    rnorm(20, 5, 1),
+    rnorm(20, 12, 2),
+    rnorm(20, 15, 2),
+    rnorm(20, 10, 2),
+    rnorm(20, 3, 1)
+  )
+)
+ggplot(df_phen, aes(x = stage, y = biomass, fill = stage)) +
+  geom_boxplot() +
+  scale_fill_martin("phenology") +
+  theme_martin() +
+  theme(legend.position = "none")
+
+#---------------------------------------
+# 6. Season
+#---------------------------------------
+df_season <- data.frame(
+  doy = rep(1:90, 4),
+  ndvi = c(
+    rnorm(90, 0.3, 0.05),
+    rnorm(90, 0.7, 0.05),
+    rnorm(90, 0.5, 0.05),
+    rnorm(90, 0.2, 0.05)
+  ),
+  season = factor(
+    rep(c("spring", "summer", "fall", "winter"), each = 90),
+    levels = c("spring", "summer", "fall", "winter")
+  )
+)
+ggplot(df_season, aes(x = doy, y = ndvi, color = season)) +
+  geom_point() +
+  scale_color_martin("season") +
+  theme_martin()
+
+#---------------------------------------
+# 7. Gender
+#---------------------------------------
+df_gender <- data.frame(
+  mass = c(rnorm(40, 75, 8), rnorm(40, 60, 7), rnorm(10, 65, 10)),
+  sex = factor(
+    c(rep("male", 40), rep("female", 40), rep("unknown", 10)),
+    levels = c("male", "female", "unknown")
+  )
+)
+ggplot(df_gender, aes(x = sex, y = mass, fill = sex)) +
+  geom_violin() +
+  scale_fill_martin("gender") +
+  theme_martin() +
+  theme(legend.position = "none")
+
+#---------------------------------------
+# 8. Temperature gradient
+#---------------------------------------
+df_temp <- expand.grid(x = 1:20, y = 1:20)
+df_temp$temp <- with(df_temp, sin(x / 3) + cos(y / 3) + rnorm(nrow(df_temp), 0, 0.2))
+ggplot(df_temp, aes(x, y, fill = temp)) +
+  geom_tile() +
+  scale_fill_martin("temp") +
+  theme_martin()
+
 ```
 # Spatial Utilities
 
