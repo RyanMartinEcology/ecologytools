@@ -8,8 +8,6 @@ theme_martin(
   base_size = NULL,
   base_family = "Libre Caslon Text",
   line_width = 1.1,
-  palette = c("discrete", "cont_grad", "grad_earth", "ribbon_forest", "ribbon_teal"),
-  palette_aes = c("fill", "color", "both"),
   legend_position = c("right", "left", "top", "bottom"),
   facet_fill = c("sand", "teal", "none"),
   grid = c("off", "x", "y", "xy"),
@@ -26,12 +24,6 @@ when \code{publication = TRUE} and 12 otherwise.}
 
 \item{line_width}{Width of axis lines and ticks. Gridlines are drawn at
 half this value.}
-
-\item{palette}{Palette choice. One of \code{"discrete"}, \code{"cont_grad"},
-\code{"grad_earth"}, \code{"ribbon_forest"}, or \code{"ribbon_teal"}.}
-
-\item{palette_aes}{Aesthetic to which the palette is applied. One of
-\code{"fill"}, \code{"color"}, or \code{"both"}.}
 
 \item{legend_position}{Legend position. One of \code{"right"} (default),
 \code{"left"}, \code{"top"}, or \code{"bottom"}.}
@@ -51,9 +43,10 @@ with ticks on all four sides (tick labels remain on bottom and left only).}
 and the palette's off-black is replaced with pure black (\code{"#000000"}).}
 }
 \value{
-A list of ggplot2 components.
+A ggplot2 theme object.
 }
 \description{
-A clean publication-style ggplot2 theme with integrated palette support.
-Built on \code{theme_void()} for predictable inheritance.
+A clean publication-style ggplot2 theme. Built on \code{theme_void()} for
+predictable inheritance. Pair with \code{scale_color_martin()} /
+\code{scale_fill_martin()} for matching palettes.
 }

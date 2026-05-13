@@ -6,6 +6,12 @@
 \usage{
 pal_continuous_n(n = 256)
 }
+\arguments{
+\item{n}{Number of colors to interpolate.}
+}
+\value{
+A character vector of \code{n} hex colors.
+}
 \description{
-Get interpolated continuous palette
+Returns \code{n} interpolated colors from the \code{"cont"} gradient.
 }
