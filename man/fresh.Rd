@@ -36,6 +36,10 @@ absent in both tables, the join uses \code{plant_id} only.
 \item \code{area} (numeric, m^2) -- area over which biomass was collected. Must
 be constant within a patch. Overridden by the \code{area} argument if
 both are supplied.
+\item \code{habitat_type} (integer, factor, or character) -- habitat
+classification for each row. If present, a \verb{$habitat} element is
+added to the output with per-habitat-type summaries averaged across
+patches. Also propagated to the \verb{$detail} output as a column.
 }}
 
 \item{nutrition_data}{Lookup data frame, one row per plant_id (and part).
@@ -106,20 +110,30 @@ An object of class \code{"fresh_output"}: a list with the following
 components.
 \itemize{
 \item \code{summary} -- a tibble with one row per patch x constraint pair.
-Columns: \code{patch_id}, \code{de_req}, \code{dp_req}, \code{suitable_biomass},
-\code{pct_suitable_biomass}, \code{animal_days_per_area}, \code{mean_de}, \code{mean_dp},
-\code{n_forages_used}, \code{total_biomass_available}, \code{limiting_constraint}. A
+Columns: \code{patch_id}, \code{de_req}, \code{dp_req}, \code{total_biomass_available},
+\code{suitable_biomass}, \code{pct_suitable_biomass}, \code{animal_days_per_area},
+\code{mean_de_total}, \code{mean_dp_total}, \code{mean_de_suitable},
+\code{mean_dp_suitable}, \code{n_forages_used}, \code{limiting_constraint}. A
 logical \code{infeasible} column is added only if at least one row was
 infeasible.
 \item \code{detail} -- a tibble with one row per forage per patch per
 constraint pair (SD groups collapsed back to the biological forage).
 Columns: \code{patch_id}, \code{de_req}, \code{dp_req}, \code{plant_id}, \code{plant_part} or
-\code{plant_phenology} (if present in input), \code{biomass_available},
-\code{biomass_used}, \code{prop_used}, \code{prop_of_total}.
+\code{plant_phenology} (if present in input), \code{habitat_type} (if present
+in input), \code{biomass_available}, \code{biomass_used}, \code{prop_used},
+\code{prop_of_total}.
+\item \code{habitat} -- a tibble with one row per habitat type x constraint
+pair, present only when \code{biomass_data} contains a \code{habitat_type}
+column. Columns: \code{habitat_type}, \code{de_req}, \code{dp_req},
+\code{mean_total_biomass_per_area}, \code{mean_suitable_biomass_per_area},
+\code{mean_de_total}, \code{mean_dp_total}, \code{mean_de_suitable},
+\code{mean_dp_suitable}. Means are simple averages across patches where
+that habitat type occurs; patches where it is absent are excluded
+from the denominator.
 \item \code{call} -- the matched call.
 \item \code{inputs} -- a named list of the resolved argument values (units,
-area, constraints, and an internal flag indicating whether
-nutritional variation was active).
+area, constraints, and internal flags indicating whether
+nutritional variation and habitat summaries were active).
 \item \code{data} -- a list with \code{biomass_data} and \code{nutrition_data} as supplied
 by the user.
 \item \code{warnings} -- a character vector of warning messages issued during

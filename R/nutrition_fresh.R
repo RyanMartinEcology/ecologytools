@@ -18,6 +18,10 @@
 #'   * `area` (numeric, m^2) -- area over which biomass was collected. Must
 #'     be constant within a patch. Overridden by the `area` argument if
 #'     both are supplied.
+#'   * `habitat_type` (integer, factor, or character) -- habitat
+#'     classification for each row. If present, a `$habitat` element is
+#'     added to the output with per-habitat-type summaries averaged across
+#'     patches. Also propagated to the `$detail` output as a column.
 #' @param nutrition_data Lookup data frame, one row per plant_id (and part).
 #'   Required columns: `plant_id` (character), `de` (numeric), `dp`
 #'   (numeric), `diet_proportion` (numeric, 0--1).
@@ -71,20 +75,30 @@
 #' @return An object of class `"fresh_output"`: a list with the following
 #'   components.
 #'   * `summary` -- a tibble with one row per patch x constraint pair.
-#'     Columns: `patch_id`, `de_req`, `dp_req`, `suitable_biomass`,
-#'     `pct_suitable_biomass`, `animal_days_per_area`, `mean_de`, `mean_dp`,
-#'     `n_forages_used`, `total_biomass_available`, `limiting_constraint`. A
+#'     Columns: `patch_id`, `de_req`, `dp_req`, `total_biomass_available`,
+#'     `suitable_biomass`, `pct_suitable_biomass`, `animal_days_per_area`,
+#'     `mean_de_total`, `mean_dp_total`, `mean_de_suitable`,
+#'     `mean_dp_suitable`, `n_forages_used`, `limiting_constraint`. A
 #'     logical `infeasible` column is added only if at least one row was
 #'     infeasible.
 #'   * `detail` -- a tibble with one row per forage per patch per
 #'     constraint pair (SD groups collapsed back to the biological forage).
 #'     Columns: `patch_id`, `de_req`, `dp_req`, `plant_id`, `plant_part` or
-#'     `plant_phenology` (if present in input), `biomass_available`,
-#'     `biomass_used`, `prop_used`, `prop_of_total`.
+#'     `plant_phenology` (if present in input), `habitat_type` (if present
+#'     in input), `biomass_available`, `biomass_used`, `prop_used`,
+#'     `prop_of_total`.
+#'   * `habitat` -- a tibble with one row per habitat type x constraint
+#'     pair, present only when `biomass_data` contains a `habitat_type`
+#'     column. Columns: `habitat_type`, `de_req`, `dp_req`,
+#'     `mean_total_biomass_per_area`, `mean_suitable_biomass_per_area`,
+#'     `mean_de_total`, `mean_dp_total`, `mean_de_suitable`,
+#'     `mean_dp_suitable`. Means are simple averages across patches where
+#'     that habitat type occurs; patches where it is absent are excluded
+#'     from the denominator.
 #'   * `call` -- the matched call.
 #'   * `inputs` -- a named list of the resolved argument values (units,
-#'     area, constraints, and an internal flag indicating whether
-#'     nutritional variation was active).
+#'     area, constraints, and internal flags indicating whether
+#'     nutritional variation and habitat summaries were active).
 #'   * `data` -- a list with `biomass_data` and `nutrition_data` as supplied
 #'     by the user.
 #'   * `warnings` -- a character vector of warning messages issued during
@@ -304,6 +318,18 @@ fresh <- function(
              call. = F)
       }
 
+      if ("habitat_type" %in% names(biomass_data)) {
+        if (!is.integer(biomass_data$habitat_type) &&
+            !is.numeric(biomass_data$habitat_type) &&
+            !is.factor(biomass_data$habitat_type) &&
+            !is.character(biomass_data$habitat_type)) {
+          stop(
+            "`biomass_data$habitat_type` must be integer, numeric, factor, ",
+            "or character.", call. = F
+          )
+        }
+      }
+
       for (col in c("sd_de", "sd_dp")) {
         if (col %in% names(nutrition_data) &&
             !is.numeric(nutrition_data[[col]])) {
@@ -506,6 +532,12 @@ fresh <- function(
         NA_real_
       }
 
+      # Resolve habitat_type: coerce to character for consistent grouping.
+      use_habitat <- "habitat_type" %in% names(joined)
+      if (use_habitat) {
+        joined$habitat_type <- as.character(joined$habitat_type)
+      }
+
       # Stable biological-forage identifier (used for combined caps and detail
       # aggregation across SD groups).
 
@@ -514,6 +546,13 @@ fresh <- function(
       } else {
         paste(joined$plant_id, joined[[part_col]], sep = "__")
       }
+
+      # bio_df: one row per patch x forage at the biological level (pre-SD
+      # expansion). Used for total-biomass weighted mean DE/DP in summary
+      # and habitat outputs. Keep habitat_type if present.
+      bio_keep <- c("patch_id", "forage_id", "density_g_m2", "de", "dp",
+                    if (use_habitat) "habitat_type")
+      bio_df <- joined[, bio_keep, drop = F]
 
       # Expand into SD groups (or pass through unchanged).
 
@@ -551,7 +590,8 @@ fresh <- function(
       detail_rows  <- list()
 
       for (pid in patches) {
-        patch_df <- expanded[expanded$patch_id == pid, , drop = F]
+        patch_df     <- expanded[expanded$patch_id == pid, , drop = F]
+        patch_bio_df <- bio_df[bio_df$patch_id == pid,    , drop = F]
         for (k in seq_len(nrow(constraint_pairs))) {
           de_req_k <- constraint_pairs$de_req[k]
           dp_req_k <- constraint_pairs$dp_req[k]
@@ -561,11 +601,12 @@ fresh <- function(
           )
 
           detail_rows[[length(detail_rows) + 1]] <- build_detail_row(
-            patch_df, lp_res, de_req_k, dp_req_k, g_m2_to_out, part_col
+            patch_df, lp_res, de_req_k, dp_req_k, g_m2_to_out,
+            part_col, use_habitat
           )
           summary_rows[[length(summary_rows) + 1]] <- build_summary_row(
-            patch_df, lp_res, de_req_k, dp_req_k, g_m2_to_out,
-            dmi_g_day, min_total_g_m2, pid
+            patch_bio_df, patch_df, lp_res, de_req_k, dp_req_k,
+            g_m2_to_out, dmi_g_day, min_total_g_m2, pid
           )
         }
       }
@@ -584,14 +625,26 @@ fresh <- function(
       if (!any(summary_df$infeasible)) summary_df$infeasible <- NULL
 
       # =========================================================================
-      # 10. ASSEMBLE FRESH_OUTPUT OBJECT
+      # 10. BUILD HABITAT TABLE (if habitat_type present)
+      # =========================================================================
+
+      habitat_df <- if (use_habitat) {
+        build_habitat_table(
+          bio_df, detail_df, constraint_pairs, g_m2_to_out
+        )
+      } else {
+        NULL
+      }
+
+      # =========================================================================
+      # 11. ASSEMBLE FRESH_OUTPUT OBJECT
       # =========================================================================
 
       out <- list(
-        summary = tibble::as_tibble(summary_df),
-        detail  = tibble::as_tibble(detail_df),
-        call    = call,
-        inputs  = list(
+        summary  = tibble::as_tibble(summary_df),
+        detail   = tibble::as_tibble(detail_df),
+        call     = call,
+        inputs   = list(
           biomass_unit        = biomass_unit,
           de_unit             = de_unit,
           dmi_unit            = dmi_unit,
@@ -603,6 +656,7 @@ fresh <- function(
           max_any_forage_prop = max_any_forage_prop,
           min_total_biomass   = min_total_biomass,
           use_variation       = use_variation,
+          use_habitat         = use_habitat,
           part_col            = part_col
         ),
         data = list(
@@ -610,6 +664,9 @@ fresh <- function(
           nutrition_data = nutrition_data
         )
       )
+
+      if (use_habitat) out$habitat <- tibble::as_tibble(habitat_df)
+
       class(out) <- c("fresh_output", "list")
       out
     },
@@ -785,7 +842,7 @@ solve_one_lp <- function(df,
   x          <- if (infeasible) rep(NA_real_, n) else lp_out$solution
 
   # Identify binding constraint by checking which of (DE, DP, total
-  # availability) is at its limit at the optimum.
+  # availability, diet cap) is at its limit at the optimum.
 
   limiting <- NA_character_
 
@@ -800,15 +857,25 @@ solve_one_lp <- function(df,
       at_de      <- abs(mean_de_sol - de_req) < .tol * max(1, de_req)
       at_dp      <- abs(mean_dp_sol - dp_req) < .tol * max(1, dp_req)
       at_biomass <- abs(total_used - total_avail) < .tol * max(1, total_avail)
-      # Priority: if total biomass is fully used, biomass is binding.
-      # Otherwise, whichever nutritional constraint is binding wins;
-      # ties resolved DE first.
+
+      # Check if any forage is at its diet_proportion or max_any_forage_prop
+      # cap (combined across SD groups).
+      at_diet_cap <- any(vapply(forages, function(f) {
+        used_f  <- sum(x[df$forage_id == f])
+        prop_f  <- if (total_used > 0) used_f / total_used else 0
+        cap_f   <- min(diet_lk[[f]], max_any_forage_prop, na.rm = T)
+        abs(prop_f - cap_f) < .tol
+      }, logical(1)))
+
+      # Priority: biomass > de > dp > diet_cap.
       limiting <- if (at_biomass) {
         "biomass"
       } else if (at_de) {
         "de"
       } else if (at_dp) {
         "dp"
+      } else if (at_diet_cap) {
+        "diet_cap"
       } else {
         NA_character_
       }
@@ -826,7 +893,8 @@ solve_one_lp <- function(df,
 #' @keywords internal
 #' @noRd
 
-build_summary_row <- function(patch_df,
+build_summary_row <- function(patch_bio_df,
+                              patch_df,
                               lp_res,
                               de_req,
                               dp_req,
@@ -835,8 +903,21 @@ build_summary_row <- function(patch_df,
                               min_total_g_m2,
                               pid
 ) {
-  total_avail_g_m2 <- sum(patch_df$density_group_g_m2)
-  total_avail_out  <- round(total_avail_g_m2 * g_m2_to_out, 2)
+  # Total-biomass weighted means: biological forage level, all forages in patch.
+  total_bio_g_m2   <- sum(patch_bio_df$density_g_m2)
+  total_avail_out  <- round(total_bio_g_m2 * g_m2_to_out, 2)
+
+  if (total_bio_g_m2 > 0) {
+    mean_de_total <- round(
+      sum(patch_bio_df$de * patch_bio_df$density_g_m2) / total_bio_g_m2, 2
+    )
+    mean_dp_total <- round(
+      sum(patch_bio_df$dp * patch_bio_df$density_g_m2) / total_bio_g_m2, 2
+    )
+  } else {
+    mean_de_total <- NA_real_
+    mean_dp_total <- NA_real_
+  }
 
   if (lp_res$infeasible) {
     data.frame(
@@ -847,8 +928,10 @@ build_summary_row <- function(patch_df,
       suitable_biomass        = NA_real_,
       pct_suitable_biomass    = NA_real_,
       animal_days_per_area    = NA_real_,
-      mean_de                 = NA_real_,
-      mean_dp                 = NA_real_,
+      mean_de_total           = mean_de_total,
+      mean_dp_total           = mean_dp_total,
+      mean_de_suitable        = NA_real_,
+      mean_dp_suitable        = NA_real_,
       n_forages_used          = NA_integer_,
       limiting_constraint     = NA_character_,
       infeasible              = T,
@@ -858,19 +941,23 @@ build_summary_row <- function(patch_df,
     suitable_g_m2 <- sum(lp_res$x)
     suitable_out  <- round(suitable_g_m2 * g_m2_to_out, 2)
     pct_suitable  <- round(
-      if (total_avail_g_m2 > 0) suitable_g_m2 / total_avail_g_m2 * 100
+      if (total_bio_g_m2 > 0) suitable_g_m2 / total_bio_g_m2 * 100
       else NA_real_,
       2
     )
     if (suitable_g_m2 > 0) {
-      mean_de <- round(sum(patch_df$de_adj * lp_res$x) / suitable_g_m2, 2)
-      mean_dp <- round(sum(patch_df$dp_adj * lp_res$x) / suitable_g_m2, 2)
+      mean_de_suitable <- round(
+        sum(patch_df$de_adj * lp_res$x) / suitable_g_m2, 2
+      )
+      mean_dp_suitable <- round(
+        sum(patch_df$dp_adj * lp_res$x) / suitable_g_m2, 2
+      )
       used_per_forage <- tapply(lp_res$x, patch_df$forage_id, sum)
       n_forages <- sum(used_per_forage > 1e-9)
     } else {
-      mean_de   <- NA_real_
-      mean_dp   <- NA_real_
-      n_forages <- 0L
+      mean_de_suitable <- NA_real_
+      mean_dp_suitable <- NA_real_
+      n_forages        <- 0L
     }
     animal_days <- if (!is.na(dmi_g_day)) {
       adj_g_m2 <- max(suitable_g_m2 - min_total_g_m2, 0)
@@ -886,8 +973,10 @@ build_summary_row <- function(patch_df,
       suitable_biomass        = suitable_out,
       pct_suitable_biomass    = pct_suitable,
       animal_days_per_area    = animal_days,
-      mean_de                 = mean_de,
-      mean_dp                 = mean_dp,
+      mean_de_total           = mean_de_total,
+      mean_dp_total           = mean_dp_total,
+      mean_de_suitable        = mean_de_suitable,
+      mean_dp_suitable        = mean_dp_suitable,
       n_forages_used          = as.integer(n_forages),
       limiting_constraint     = lp_res$limiting,
       infeasible              = F,
@@ -908,12 +997,14 @@ build_detail_row <- function(patch_df,
                              de_req,
                              dp_req,
                              g_m2_to_out,
-                             part_col
+                             part_col,
+                             use_habitat
 ) {
   patch_df$x_used <- lp_res$x
 
   agg_keys <- c("patch_id", "plant_id",
                 if (!is.null(part_col)) part_col,
+                if (use_habitat) "habitat_type",
                 "forage_id")
   agg <- stats::aggregate(
     patch_df[, c("density_group_g_m2", "x_used")],
@@ -953,7 +1044,135 @@ build_detail_row <- function(patch_df,
 
   col_order <- c("patch_id", "de_req", "dp_req", "plant_id",
                  if (!is.null(part_col)) part_col,
+                 if (use_habitat) "habitat_type",
                  "biomass_available", "biomass_used",
                  "prop_used", "prop_of_total")
   agg[, col_order, drop = F]
+}
+
+
+#' Build the habitat-type summary table.
+#'
+#' Averages per-patch values across patches for each habitat_type x
+#' constraint pair. Patches where a habitat type is absent are excluded
+#' from the patch-count denominator.
+#'
+#' @param bio_df Biological-forage-level data frame (pre-SD expansion) with
+#'   columns patch_id, forage_id, density_g_m2, de, dp, habitat_type.
+#' @param detail_df The assembled detail tibble (all patches, all constraint
+#'   pairs) with columns patch_id, de_req, dp_req, habitat_type,
+#'   biomass_available (in output units), biomass_used (in output units).
+#' @param constraint_pairs Data frame with de_req and dp_req columns.
+#' @param g_m2_to_out Conversion factor from g/m^2 to output area unit.
+#'
+#' @keywords internal
+#' @noRd
+
+build_habitat_table <- function(bio_df,
+                                detail_df,
+                                constraint_pairs,
+                                g_m2_to_out
+) {
+
+  habitat_types <- sort(unique(bio_df$habitat_type))
+  rows <- list()
+
+  for (ht in habitat_types) {
+    bio_ht <- bio_df[bio_df$habitat_type == ht, , drop = F]
+
+    # Patches that contain this habitat type.
+    patches_ht <- unique(bio_ht$patch_id)
+    n_patches  <- length(patches_ht)
+
+    # Per-patch total biomass density and weighted mean DE/DP (total).
+    total_bio_per_patch <- vapply(patches_ht, function(pid) {
+      d <- bio_ht[bio_ht$patch_id == pid, , drop = F]
+      sum(d$density_g_m2) * g_m2_to_out
+    }, numeric(1))
+
+    wt_de_total_per_patch <- vapply(patches_ht, function(pid) {
+      d <- bio_ht[bio_ht$patch_id == pid, , drop = F]
+      w <- sum(d$density_g_m2)
+      if (w > 0) sum(d$de * d$density_g_m2) / w else NA_real_
+    }, numeric(1))
+
+    wt_dp_total_per_patch <- vapply(patches_ht, function(pid) {
+      d <- bio_ht[bio_ht$patch_id == pid, , drop = F]
+      w <- sum(d$density_g_m2)
+      if (w > 0) sum(d$dp * d$density_g_m2) / w else NA_real_
+    }, numeric(1))
+
+    mean_total_bio  <- round(mean(total_bio_per_patch),           2)
+    mean_de_total   <- round(mean(wt_de_total_per_patch, na.rm = T), 2)
+    mean_dp_total   <- round(mean(wt_dp_total_per_patch, na.rm = T), 2)
+
+    for (k in seq_len(nrow(constraint_pairs))) {
+      de_req_k <- constraint_pairs$de_req[k]
+      dp_req_k <- constraint_pairs$dp_req[k]
+
+      # Pull suitable biomass per patch from detail_df for this ht x constraint.
+      det_k <- detail_df[
+        detail_df$de_req       == de_req_k &
+          detail_df$dp_req       == dp_req_k &
+          detail_df$habitat_type == ht       &
+          detail_df$patch_id     %in% patches_ht, , drop = F
+      ]
+
+      # Per-patch suitable biomass and weighted mean DE/DP (suitable).
+      # biomass_used in detail is already in output units; we need g/m^2 for
+      # the weighted mean weight, but we only have output units here.
+      # Weight by biomass_used directly (proportional to g/m^2).
+      suit_per_patch <- vapply(patches_ht, function(pid) {
+        d <- det_k[det_k$patch_id == pid, , drop = F]
+        sum(d$biomass_used, na.rm = T)
+      }, numeric(1))
+
+      # For weighted mean DE/DP suitable: join back to bio_df for de/dp values,
+      # using biomass_used as weights. Match on patch_id x forage_id via detail.
+      wt_de_suit_per_patch <- vapply(patches_ht, function(pid) {
+        d    <- det_k[det_k$patch_id == pid, , drop = F]
+        w    <- d$biomass_used
+        w[is.na(w)] <- 0
+        total_w <- sum(w)
+        if (total_w == 0) return(NA_real_)
+        bio_p <- bio_df[bio_df$patch_id == pid &
+                          bio_df$habitat_type == ht, , drop = F]
+        if (nrow(bio_p) == 0 || sum(bio_p$density_g_m2) == 0) return(NA_real_)
+        sum(bio_p$de * bio_p$density_g_m2) / sum(bio_p$density_g_m2)
+      }, numeric(1))
+
+      wt_dp_suit_per_patch <- vapply(patches_ht, function(pid) {
+        d    <- det_k[det_k$patch_id == pid, , drop = F]
+        w    <- d$biomass_used
+        w[is.na(w)] <- 0
+        total_w <- sum(w)
+        if (total_w == 0) return(NA_real_)
+        bio_p <- bio_df[bio_df$patch_id == pid &
+                          bio_df$habitat_type == ht, , drop = F]
+        if (nrow(bio_p) == 0 || sum(bio_p$density_g_m2) == 0) return(NA_real_)
+        sum(bio_p$dp * bio_p$density_g_m2) / sum(bio_p$density_g_m2)
+      }, numeric(1))
+
+      mean_suit_bio    <- round(mean(suit_per_patch,              na.rm = T), 2)
+      mean_de_suitable <- round(mean(wt_de_suit_per_patch,        na.rm = T), 2)
+      mean_dp_suitable <- round(mean(wt_dp_suit_per_patch,        na.rm = T), 2)
+
+      rows[[length(rows) + 1]] <- data.frame(
+        habitat_type                  = ht,
+        de_req                        = de_req_k,
+        dp_req                        = dp_req_k,
+        mean_total_biomass_per_area   = mean_total_bio,
+        mean_suitable_biomass_per_area = mean_suit_bio,
+        mean_de_total                 = mean_de_total,
+        mean_dp_total                 = mean_dp_total,
+        mean_de_suitable              = mean_de_suitable,
+        mean_dp_suitable              = mean_dp_suitable,
+        stringsAsFactors              = F
+      )
+    }
+  }
+
+  result <- do.call(rbind, rows)
+  rownames(result) <- NULL
+  result
 }
