@@ -572,6 +572,11 @@ fresh <- function(
 
       summary_df <- do.call(rbind, summary_rows)
       detail_df  <- do.call(rbind, detail_rows)
+
+      # Sort alphabetically by patch_id, preserving constraint-pair order
+      # within each patch.
+      summary_df <- summary_df[order(summary_df$patch_id), , drop = F]
+      detail_df  <- detail_df[order(detail_df$patch_id),   , drop = F]
       rownames(summary_df) <- NULL
       rownames(detail_df)  <- NULL
 
@@ -838,13 +843,13 @@ build_summary_row <- function(patch_df,
       patch_id                = pid,
       de_req                  = de_req,
       dp_req                  = dp_req,
+      total_biomass_available = total_avail_out,
       suitable_biomass        = NA_real_,
       pct_suitable_biomass    = NA_real_,
       animal_days_per_area    = NA_real_,
       mean_de                 = NA_real_,
       mean_dp                 = NA_real_,
       n_forages_used          = NA_integer_,
-      total_biomass_available = total_avail_out,
       limiting_constraint     = NA_character_,
       infeasible              = T,
       stringsAsFactors        = F
@@ -877,13 +882,13 @@ build_summary_row <- function(patch_df,
       patch_id                = pid,
       de_req                  = de_req,
       dp_req                  = dp_req,
+      total_biomass_available = total_avail_out,
       suitable_biomass        = suitable_out,
       pct_suitable_biomass    = pct_suitable,
       animal_days_per_area    = animal_days,
       mean_de                 = mean_de,
       mean_dp                 = mean_dp,
       n_forages_used          = as.integer(n_forages),
-      total_biomass_available = total_avail_out,
       limiting_constraint     = lp_res$limiting,
       infeasible              = F,
       stringsAsFactors        = F
