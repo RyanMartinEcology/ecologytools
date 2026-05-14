@@ -1,9 +1,13 @@
 Package: ecologytools
 Title: Utilities and Data Visualization Tools for Ecology
-Version: 0.6
+Version: 0.7
 Authors@R: 
     person("Ryan", "Martin", email = "ryanmartin@uidaho.edu", role = c("aut", "cre"))
-Description: Provides custom functions and plotting utilities for ecological data analysis and visualization. The current version includes the theme_martin() ggplot2 theme for creating publication-style figures.
+Description: Provides custom functions, plotting utilities, and quantitative
+    tools for ecological data analysis and visualization. Includes the
+    theme_martin() ggplot2 theme for publication-style figures and the
+    fresh() function for evaluating habitat-scale forage resources for
+    generalist herbivores via linear programming.
 License: GPL-3
 Encoding: UTF-8
 LazyData: true
@@ -18,9 +22,12 @@ Imports:
     dbscan,
     dplyr,
     lubridate,
-    rlang
+    rlang,
+    lpSolve,
+    tibble
 Suggests:
     ggtext,
     patchwork
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.3
+
