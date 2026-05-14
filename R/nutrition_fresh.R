@@ -68,12 +68,13 @@
 #'   suppressed from the console. Either way, all warning messages are
 #'   collected and returned in the `warnings` element of the output object.
 #'
-#' @return An object of class `"fresh"`: a list with the following components.
+#' @return An object of class `"fresh_output"`: a list with the following
+#'   components.
 #'   * `summary` -- a tibble with one row per patch x constraint pair.
 #'     Columns: `patch_id`, `de_req`, `dp_req`, `suitable_biomass`,
-#'     `animal_days_per_area`, `mean_de`, `mean_dp`, `n_forages_used`,
-#'     `total_biomass_available`, `limiting_constraint`. A logical
-#'     `infeasible` column is added only if at least one row was
+#'     `pct_suitable_biomass`, `animal_days_per_area`, `mean_de`, `mean_dp`,
+#'     `n_forages_used`, `total_biomass_available`, `limiting_constraint`. A
+#'     logical `infeasible` column is added only if at least one row was
 #'     infeasible.
 #'   * `detail` -- a tibble with one row per forage per patch per
 #'     constraint pair (SD groups collapsed back to the biological forage).
@@ -134,7 +135,7 @@ fresh <- function(
     max_any_forage_prop = 1,
     min_total_biomass = 0,
     warnings = T
-    ) {
+) {
 
   # =========================================================================
   # 0. WARNING COLLECTION SETUP
@@ -469,48 +470,7 @@ fresh <- function(
       }
 
       # =========================================================================
-      # 6. NUTRITION VALUE RANGE CHECKS
-      # =========================================================================
-
-      de_oor <- nutrition_data$de <= -5 | nutrition_data$de >= 22
-
-      if (any(de_oor, na.rm = T)) {
-        if (mean(de_oor, na.rm = T) > 0.2) {
-          stop(
-            "More than 20% of `de` values are outside (0, 20). Check units.",
-            call. = F
-          )
-        } else {
-          warning(
-            sum(de_oor, na.rm = T), " `de` value(s) are outside (0, 20).",
-            call. = F
-          )
-        }
-      }
-
-      dp_oor <- nutrition_data$dp <= -5 | nutrition_data$dp >= 30
-
-      if (any(dp_oor, na.rm = T)) {
-        if (mean(dp_oor, na.rm = T) > 0.2) {
-          stop(
-            "More than 20% of `dp` values are outside (1, 30). Check units.",
-            call. = F
-          )
-        } else {
-          warning(
-            sum(dp_oor, na.rm = T), " `dp` value(s) are outside (1, 30).",
-            call. = F
-          )
-        }
-      }
-
-      if (any(nutrition_data$diet_proportion < 0 |
-              nutrition_data$diet_proportion > 1, na.rm = T)) {
-        stop("`diet_proportion` values must be in [0, 1].", call. = F)
-      }
-
-      # =========================================================================
-      # 7. SD COLUMN HANDLING (NUTRITIONAL VARIATION)
+      # 6. SD COLUMN HANDLING (NUTRITIONAL VARIATION)
       # =========================================================================
 
       has_sd_de <- "sd_de" %in% names(nutrition_data)
@@ -526,7 +486,7 @@ fresh <- function(
       use_variation <- has_sd_de && has_sd_dp
 
       # =========================================================================
-      # 8. JOIN, INTERNAL UNIT CONVERSION, AND SD GROUP EXPANSION
+      # 7. JOIN, INTERNAL UNIT CONVERSION, AND SD GROUP EXPANSION
       #    Internal units: biomass in g, area in m^2, density in g/m^2,
       #    DMI in g/day.
       # =========================================================================
@@ -560,7 +520,7 @@ fresh <- function(
       expanded <- expand_sd_groups(joined, use_variation)
 
       # =========================================================================
-      # 9. OUTPUT UNIT CONVERSION FACTORS
+      # 8. OUTPUT UNIT CONVERSION FACTORS
       # =========================================================================
 
       g_m2_to_out <- switch(
@@ -576,7 +536,7 @@ fresh <- function(
       min_total_g_m2 <- min_total_biomass / g_m2_to_out
 
       # =========================================================================
-      # 10. ITERATE OVER PATCHES x CONSTRAINT PAIRS, COLLECT RESULTS
+      # 9. ITERATE OVER PATCHES x CONSTRAINT PAIRS, COLLECT RESULTS
       # =========================================================================
 
       patches <- unique(expanded$patch_id)
@@ -619,7 +579,7 @@ fresh <- function(
       if (!any(summary_df$infeasible)) summary_df$infeasible <- NULL
 
       # =========================================================================
-      # 11. ASSEMBLE FRESH OBJECT
+      # 10. ASSEMBLE FRESH_OUTPUT OBJECT
       # =========================================================================
 
       out <- list(
@@ -645,14 +605,14 @@ fresh <- function(
           nutrition_data = nutrition_data
         )
       )
-      class(out) <- c("fresh", "list")
+      class(out) <- c("fresh_output", "list")
       out
     },
     warning = collect_warning
   )
 
   # =========================================================================
-  # 12. ATTACH WARNING LOG AND RETURN
+  # 11. ATTACH WARNING LOG AND RETURN
   # =========================================================================
 
   out$warnings <- if (length(warning_log) == 0) "no warnings" else warning_log
@@ -675,7 +635,7 @@ fresh <- function(
 
 expand_sd_groups <- function(df,
                              use_variation
-                             ) {
+) {
 
   if (!use_variation) {
     df$group              <- "mid"
@@ -869,9 +829,9 @@ build_summary_row <- function(patch_df,
                               dmi_g_day,
                               min_total_g_m2,
                               pid
-                              ) {
+) {
   total_avail_g_m2 <- sum(patch_df$density_group_g_m2)
-  total_avail_out  <- total_avail_g_m2 * g_m2_to_out
+  total_avail_out  <- round(total_avail_g_m2 * g_m2_to_out, 2)
 
   if (lp_res$infeasible) {
     data.frame(
@@ -879,6 +839,7 @@ build_summary_row <- function(patch_df,
       de_req                  = de_req,
       dp_req                  = dp_req,
       suitable_biomass        = NA_real_,
+      pct_suitable_biomass    = NA_real_,
       animal_days_per_area    = NA_real_,
       mean_de                 = NA_real_,
       mean_dp                 = NA_real_,
@@ -890,9 +851,15 @@ build_summary_row <- function(patch_df,
     )
   } else {
     suitable_g_m2 <- sum(lp_res$x)
+    suitable_out  <- round(suitable_g_m2 * g_m2_to_out, 2)
+    pct_suitable  <- round(
+      if (total_avail_g_m2 > 0) suitable_g_m2 / total_avail_g_m2 * 100
+      else NA_real_,
+      2
+    )
     if (suitable_g_m2 > 0) {
-      mean_de <- sum(patch_df$de_adj * lp_res$x) / suitable_g_m2
-      mean_dp <- sum(patch_df$dp_adj * lp_res$x) / suitable_g_m2
+      mean_de <- round(sum(patch_df$de_adj * lp_res$x) / suitable_g_m2, 2)
+      mean_dp <- round(sum(patch_df$dp_adj * lp_res$x) / suitable_g_m2, 2)
       used_per_forage <- tapply(lp_res$x, patch_df$forage_id, sum)
       n_forages <- sum(used_per_forage > 1e-9)
     } else {
@@ -902,7 +869,7 @@ build_summary_row <- function(patch_df,
     }
     animal_days <- if (!is.na(dmi_g_day)) {
       adj_g_m2 <- max(suitable_g_m2 - min_total_g_m2, 0)
-      (adj_g_m2 / dmi_g_day) * g_m2_to_out
+      round((adj_g_m2 / dmi_g_day) * g_m2_to_out, 2)
     } else {
       NA_real_
     }
@@ -910,7 +877,8 @@ build_summary_row <- function(patch_df,
       patch_id                = pid,
       de_req                  = de_req,
       dp_req                  = dp_req,
-      suitable_biomass        = suitable_g_m2 * g_m2_to_out,
+      suitable_biomass        = suitable_out,
+      pct_suitable_biomass    = pct_suitable,
       animal_days_per_area    = animal_days,
       mean_de                 = mean_de,
       mean_dp                 = mean_dp,
@@ -936,7 +904,7 @@ build_detail_row <- function(patch_df,
                              dp_req,
                              g_m2_to_out,
                              part_col
-                             ) {
+) {
   patch_df$x_used <- lp_res$x
 
   agg_keys <- c("patch_id", "plant_id",
@@ -948,23 +916,27 @@ build_detail_row <- function(patch_df,
     FUN = function(v) if (all(is.na(v))) NA_real_ else sum(v, na.rm = T)
   )
 
-  agg$biomass_available <- agg$density_group_g_m2 * g_m2_to_out
-  agg$biomass_used      <- agg$x_used * g_m2_to_out
+  agg$biomass_available <- round(agg$density_group_g_m2 * g_m2_to_out, 2)
+  agg$biomass_used      <- round(agg$x_used * g_m2_to_out, 2)
 
   total_used_g_m2 <- if (lp_res$infeasible) NA_real_ else sum(lp_res$x)
 
-  agg$prop_used <- ifelse(
+  agg$prop_used <- round(ifelse(
     is.na(agg$biomass_used) | agg$biomass_available == 0,
     NA_real_,
     agg$biomass_used / agg$biomass_available
+  ), 2)
+
+  agg$prop_of_total <- round(
+    if (lp_res$infeasible ||
+        is.na(total_used_g_m2) ||
+        total_used_g_m2 == 0) {
+      rep(NA_real_, nrow(agg))
+    } else {
+      agg$x_used / total_used_g_m2
+    },
+    2
   )
-  agg$prop_of_total <- if (lp_res$infeasible ||
-                           is.na(total_used_g_m2) ||
-                           total_used_g_m2 == 0) {
-    rep(NA_real_, nrow(agg))
-  } else {
-    agg$x_used / total_used_g_m2
-  }
 
   agg$de_req <- de_req
   agg$dp_req <- dp_req

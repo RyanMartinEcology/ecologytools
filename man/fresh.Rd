@@ -102,13 +102,14 @@ suppressed from the console. Either way, all warning messages are
 collected and returned in the \code{warnings} element of the output object.}
 }
 \value{
-An object of class \code{"fresh"}: a list with the following components.
+An object of class \code{"fresh_output"}: a list with the following
+components.
 \itemize{
 \item \code{summary} -- a tibble with one row per patch x constraint pair.
 Columns: \code{patch_id}, \code{de_req}, \code{dp_req}, \code{suitable_biomass},
-\code{animal_days_per_area}, \code{mean_de}, \code{mean_dp}, \code{n_forages_used},
-\code{total_biomass_available}, \code{limiting_constraint}. A logical
-\code{infeasible} column is added only if at least one row was
+\code{pct_suitable_biomass}, \code{animal_days_per_area}, \code{mean_de}, \code{mean_dp},
+\code{n_forages_used}, \code{total_biomass_available}, \code{limiting_constraint}. A
+logical \code{infeasible} column is added only if at least one row was
 infeasible.
 \item \code{detail} -- a tibble with one row per forage per patch per
 constraint pair (SD groups collapsed back to the biological forage).
