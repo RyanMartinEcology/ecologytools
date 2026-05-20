@@ -13,9 +13,11 @@ and taxa as columns. Column names are taxon identifiers (e.g.,
 each row is assumed to be already normalized (e.g., to sum to 1).}
 
 \item{plant_summary}{Output of \code{\link[=plant_quality_summary]{plant_quality_summary()}}, used as the
-taxonomic lookup. Its \verb{$species}, \verb{$genus}, \verb{$family}, and \verb{$order}
-tibbles supply the valid \code{Scientific.Name}, \code{Genus}, \code{Family}, and
-\code{Order} values.}
+taxonomic lookup for genus, family, and order. Its \verb{$genus}, \verb{$family},
+and \verb{$order} tibbles supply the valid \code{Genus}, \code{Family}, and \code{Order}
+values. Species-level assignment does not use the lookup; any column
+whose name splits on whitespace into exactly two tokens is treated as
+a species.}
 
 \item{resolve}{Either \code{"all"} (default) or \code{"skip"}. When \code{"all"}, columns
 that cannot be resolved to any rank appear in each level's output with
@@ -33,15 +35,20 @@ and order resolutions from a sample-by-taxon relative read abundance (RRA)
 matrix. Within each sample, RRA values are summed by taxonomic group; the
 resulting per-sample proportions are then summarized across samples as
 \code{max + sd}, capped at 1, and returned as a single \code{diet_proportion}
-column for each rank. output intended as capped diet proportions for the FRESH model.
+column for each rank.
 }
 \details{
-Each input column is assigned to its lowest-resolution rank by matching
-against the lookup tables in \code{plant_summary}: first
-\code{species$Scientific.Name}, then \code{genus$Genus}, \code{family$Family}, and
-\code{order$Order}. Columns matched at species level contribute to species,
-genus, family, and order summaries; columns matched at genus level
-contribute to genus, family, and order; family-level columns contribute
-to family and order; order-level columns contribute only to order. Genus,
-family, and order are looked up for each species via the lookup tables.
+Each input column is assigned to its lowest-resolution rank. Species-level
+assignment is based purely on column-name structure: any column name that
+splits on whitespace into exactly two tokens is treated as species. For
+higher ranks, columns are matched against \code{plant_summary$genus$Genus},
+\code{plant_summary$family$Family}, and \code{plant_summary$order$Order} in order.
+
+Columns assigned at species level contribute to species, genus, family,
+and order summaries; columns matched at genus level contribute to genus,
+family, and order; family-level columns contribute to family and order;
+order-level columns contribute only to order. Genus, family, and order
+for each species-level column are derived from the first whitespace-
+separated token (genus) and then looked up in
+\code{plant_summary$genus}.
 }

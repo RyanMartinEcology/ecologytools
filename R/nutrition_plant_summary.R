@@ -114,16 +114,18 @@ plant_quality_summary <- function(data) {
 #' matrix. Within each sample, RRA values are summed by taxonomic group; the
 #' resulting per-sample proportions are then summarized across samples as
 #' `max + sd`, capped at 1, and returned as a single `diet_proportion`
-#' column for each rank. output intended as capped diet proportions for the FRESH model.
+#' column for each rank.
 #'
 #' @param rra A data frame, tibble, or numeric matrix with samples as rows
 #'   and taxa as columns. Column names are taxon identifiers (e.g.,
 #'   `"Abies lasiocarpa"`, `"Pinaceae"`). All columns must be numeric, and
 #'   each row is assumed to be already normalized (e.g., to sum to 1).
 #' @param plant_summary Output of [plant_quality_summary()], used as the
-#'   taxonomic lookup. Its `$species`, `$genus`, `$family`, and `$order`
-#'   tibbles supply the valid `Scientific.Name`, `Genus`, `Family`, and
-#'   `Order` values.
+#'   taxonomic lookup for genus, family, and order. Its `$genus`, `$family`,
+#'   and `$order` tibbles supply the valid `Genus`, `Family`, and `Order`
+#'   values. Species-level assignment does not use the lookup; any column
+#'   whose name splits on whitespace into exactly two tokens is treated as
+#'   a species.
 #' @param resolve Either `"all"` (default) or `"skip"`. When `"all"`, columns
 #'   that cannot be resolved to any rank appear in each level's output with
 #'   `diet_proportion = NA_real_`. When `"skip"`, unresolved columns are
@@ -134,14 +136,19 @@ plant_quality_summary <- function(data) {
 #'   `Family`, or `Order`) and `diet_proportion`.
 #'
 #' @details
-#' Each input column is assigned to its lowest-resolution rank by matching
-#' against the lookup tables in `plant_summary`: first
-#' `species$Scientific.Name`, then `genus$Genus`, `family$Family`, and
-#' `order$Order`. Columns matched at species level contribute to species,
-#' genus, family, and order summaries; columns matched at genus level
-#' contribute to genus, family, and order; family-level columns contribute
-#' to family and order; order-level columns contribute only to order. Genus,
-#' family, and order are looked up for each species via the lookup tables.
+#' Each input column is assigned to its lowest-resolution rank. Species-level
+#' assignment is based purely on column-name structure: any column name that
+#' splits on whitespace into exactly two tokens is treated as species. For
+#' higher ranks, columns are matched against `plant_summary$genus$Genus`,
+#' `plant_summary$family$Family`, and `plant_summary$order$Order` in order.
+#'
+#' Columns assigned at species level contribute to species, genus, family,
+#' and order summaries; columns matched at genus level contribute to genus,
+#' family, and order; family-level columns contribute to family and order;
+#' order-level columns contribute only to order. Genus, family, and order
+#' for each species-level column are derived from the first whitespace-
+#' separated token (genus) and then looked up in
+#' `plant_summary$genus`.
 #'
 #' @importFrom dplyr group_by summarise mutate select left_join distinct bind_rows
 #' @importFrom tibble tibble as_tibble
@@ -172,19 +179,21 @@ calc_diet_prop <- function(rra, plant_summary, resolve = c("all", "skip")) {
   taxa <- colnames(mat)
 
   # Pull lookup vectors from plant_summary; tolerate missing levels.
-  sp_lookup <- if (!is.null(plant_summary$species)) plant_summary$species else NULL
-  gn_lookup <- if (!is.null(plant_summary$genus))   plant_summary$genus   else NULL
-  fm_lookup <- if (!is.null(plant_summary$family))  plant_summary$family  else NULL
-  od_lookup <- if (!is.null(plant_summary$order))   plant_summary$order   else NULL
+  gn_lookup <- if (!is.null(plant_summary$genus))  plant_summary$genus  else NULL
+  fm_lookup <- if (!is.null(plant_summary$family)) plant_summary$family else NULL
+  od_lookup <- if (!is.null(plant_summary$order))  plant_summary$order  else NULL
 
-  sp_names <- if (!is.null(sp_lookup)) unique(sp_lookup$Scientific.Name) else character(0)
-  gn_names <- if (!is.null(gn_lookup)) unique(gn_lookup$Genus)           else character(0)
-  fm_names <- if (!is.null(fm_lookup)) unique(fm_lookup$Family)          else character(0)
-  od_names <- if (!is.null(od_lookup)) unique(od_lookup$Order)           else character(0)
+  gn_names <- if (!is.null(gn_lookup)) unique(gn_lookup$Genus)  else character(0)
+  fm_names <- if (!is.null(fm_lookup)) unique(fm_lookup$Family) else character(0)
+  od_names <- if (!is.null(od_lookup)) unique(od_lookup$Order)  else character(0)
+
+  # Count whitespace-separated tokens per column name; species = exactly 2.
+  n_tokens <- lengths(strsplit(taxa, "\\s+"))
 
   # Assign each column to its lowest-resolution rank.
-  rank <- vapply(taxa, function(t) {
-    if (t %in% sp_names) "species"
+  rank <- vapply(seq_along(taxa), function(i) {
+    t <- taxa[i]
+    if (n_tokens[i] == 2) "species"
     else if (t %in% gn_names) "genus"
     else if (t %in% fm_names) "family"
     else if (t %in% od_names) "order"
@@ -192,19 +201,6 @@ calc_diet_prop <- function(rra, plant_summary, resolve = c("all", "skip")) {
   }, character(1))
 
   unmatched <- taxa[is.na(rank)]
-
-  # Resolve each species-level column to its genus, family, and order via the
-  # species lookup table.
-  sp_to_higher <- if (!is.null(sp_lookup)) {
-    sp_lookup |>
-      dplyr::select(.data$Scientific.Name, .data$Genus, .data$Family, .data$Order) |>
-      dplyr::distinct(.data$Scientific.Name, .keep_all = TRUE)
-  } else {
-    tibble::tibble(
-      Scientific.Name = character(0),
-      Genus = character(0), Family = character(0), Order = character(0)
-    )
-  }
 
   # Resolve each genus-level column to its family and order via the genus
   # lookup table.
@@ -225,6 +221,9 @@ calc_diet_prop <- function(rra, plant_summary, resolve = c("all", "skip")) {
     tibble::tibble(Family = character(0), Order = character(0))
   }
 
+  # First whitespace-separated token of each species-level column (= genus).
+  sp_first <- vapply(taxa, function(t) strsplit(t, "\\s+")[[1]][1], character(1))
+
   # For a given output level, return the higher-rank name each input column
   # rolls up to (NA if the column does not contribute at that level).
   taxon_at <- function(level) {
@@ -237,14 +236,13 @@ calc_diet_prop <- function(rra, plant_summary, resolve = c("all", "skip")) {
         if (r == "species") out[i] <- t
       } else if (level == "genus") {
         if (r == "species") {
-          out[i] <- sp_to_higher$Genus[match(t, sp_to_higher$Scientific.Name)]
+          out[i] <- sp_first[i]
         } else if (r == "genus") {
           out[i] <- t
         }
       } else if (level == "family") {
         if (r == "species") {
-          g <- sp_to_higher$Genus[match(t, sp_to_higher$Scientific.Name)]
-          out[i] <- gn_to_higher$Family[match(g, gn_to_higher$Genus)]
+          out[i] <- gn_to_higher$Family[match(sp_first[i], gn_to_higher$Genus)]
         } else if (r == "genus") {
           out[i] <- gn_to_higher$Family[match(t, gn_to_higher$Genus)]
         } else if (r == "family") {
@@ -252,8 +250,7 @@ calc_diet_prop <- function(rra, plant_summary, resolve = c("all", "skip")) {
         }
       } else if (level == "order") {
         if (r == "species") {
-          g <- sp_to_higher$Genus[match(t, sp_to_higher$Scientific.Name)]
-          out[i] <- gn_to_higher$Order[match(g, gn_to_higher$Genus)]
+          out[i] <- gn_to_higher$Order[match(sp_first[i], gn_to_higher$Genus)]
         } else if (r == "genus") {
           out[i] <- gn_to_higher$Order[match(t, gn_to_higher$Genus)]
         } else if (r == "family") {
