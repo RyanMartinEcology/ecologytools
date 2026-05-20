@@ -38,21 +38,25 @@ resulting per-sample proportions are then summarized across samples as
 \code{max + sd}, capped at 1, and returned as \code{diet_proportion}.
 }
 \details{
-Each input column is assigned to its lowest-resolution rank by exact
-matching against \code{lookup}: first \code{Scientific.Name} (species), then
-\code{Genus}, \code{Family}, and \code{Order}. Columns matched at species level
-contribute to species, genus, family, and order; columns matched at
-genus contribute to genus, family, and order; family-level columns to
-family and order; order-level columns to order only.
+Each input column is assigned to a rank as follows:
+\itemize{
+\item Species: exact match against \code{lookup$Scientific.Name}.
+\item Genus: a two-word column name is parsed to its first whitespace-
+separated token and treated as a genus; a single-word column name is
+used as is. In both cases, the resulting genus contributes to the
+genus, family, and order outputs. The \code{genus_in_lookup} flag indicates
+whether that genus appears in \code{lookup$Genus}.
+\item Family: single-word columns that did not match at genus level are
+checked against \code{lookup$Family}.
+\item Order: single-word columns that did not match at genus or family
+level are checked against \code{lookup$Order}.
+}
 
-For each species-level column, the parent genus, family, and order are
-obtained from the species' row in \code{lookup} (first occurrence retained
-when a species spans multiple rows). For each genus-level column, the
-parent family and order are obtained by deduplicating \code{lookup} by
-\code{Genus} and taking the first occurrence. For each family-level column,
-order is obtained the same way.
-
-The \verb{*_in_lookup} flag on each higher-rank output indicates whether the
-rolled-up taxon name (e.g., the genus name a species rolls up to) exists
-in the corresponding lookup column.
+Higher-rank rollups for two-word columns are obtained by looking up the
+first-token genus in a deduplicated \code{Genus} → \code{Family}/\code{Order} table
+(first occurrence retained). Genus-rank columns roll up the same way;
+family-rank columns roll up to order via \code{lookup$Family} →
+\code{lookup$Order} (first occurrence retained). Two-word columns whose first
+token is not in \code{lookup$Genus} will receive \code{NA} for family/order
+rollups and contribute only at genus level (with \code{genus_in_lookup = FALSE}).
 }
