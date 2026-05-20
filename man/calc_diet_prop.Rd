@@ -4,7 +4,7 @@
 \alias{calc_diet_prop}
 \title{Summarize diet proportions from RRA metabarcoding data}
 \usage{
-calc_diet_prop(rra, plant_summary, resolve = c("all", "skip"))
+calc_diet_prop(rra, lookup, resolve = c("all", "skip"))
 }
 \arguments{
 \item{rra}{A data frame, tibble, or numeric matrix with samples as rows
@@ -12,43 +12,47 @@ and taxa as columns. Column names are taxon identifiers (e.g.,
 \code{"Abies lasiocarpa"}, \code{"Pinaceae"}). All columns must be numeric, and
 each row is assumed to be already normalized (e.g., to sum to 1).}
 
-\item{plant_summary}{Output of \code{\link[=plant_quality_summary]{plant_quality_summary()}}, used as the
-taxonomic lookup for genus, family, and order. Its \verb{$genus}, \verb{$family},
-and \verb{$order} tibbles supply the valid \code{Genus}, \code{Family}, and \code{Order}
-values. Species-level assignment does not use the lookup; any column
-whose name splits on whitespace into exactly two tokens is treated as
-a species.}
+\item{lookup}{A taxonomy table containing at minimum the columns
+\code{Scientific.Name}, \code{Genus}, \code{Family}, and \code{Order}. If any of these
+columns is missing, a warning is issued and the affected rank is
+skipped (returned as \code{NULL} in the output list).}
 
 \item{resolve}{Either \code{"all"} (default) or \code{"skip"}. When \code{"all"}, columns
-that cannot be resolved to any rank appear in each level's output with
+that cannot be resolved to any rank appear in every level's output with
 \code{diet_proportion = NA_real_}. When \code{"skip"}, unresolved columns are
 silently dropped.}
 }
 \value{
 A named list with elements \code{species}, \code{genus}, \code{family}, \code{order}.
-Each is a tibble with two columns: the taxon name (\code{species}, \code{Genus},
-\code{Family}, or \code{Order}) and \code{diet_proportion}.
+The species element has two columns (\code{species}, \code{diet_proportion}). The
+genus, family, and order elements include an additional logical column
+(\code{genus_in_lookup}, \code{family_in_lookup}, \code{order_in_lookup}) indicating
+whether the rolled-up taxon name was found in \code{lookup}. A level whose
+required lookup column is absent is returned as \code{NULL}.
 }
 \description{
 Computes per-taxon diet proportion summaries at species, genus, family,
 and order resolutions from a sample-by-taxon relative read abundance (RRA)
 matrix. Within each sample, RRA values are summed by taxonomic group; the
 resulting per-sample proportions are then summarized across samples as
-\code{max + sd}, capped at 1, and returned as a single \code{diet_proportion}
-column for each rank.
+\code{max + sd}, capped at 1, and returned as \code{diet_proportion}.
 }
 \details{
-Each input column is assigned to its lowest-resolution rank. Species-level
-assignment is based purely on column-name structure: any column name that
-splits on whitespace into exactly two tokens is treated as species. For
-higher ranks, columns are matched against \code{plant_summary$genus$Genus},
-\code{plant_summary$family$Family}, and \code{plant_summary$order$Order} in order.
+Each input column is assigned to its lowest-resolution rank by exact
+matching against \code{lookup}: first \code{Scientific.Name} (species), then
+\code{Genus}, \code{Family}, and \code{Order}. Columns matched at species level
+contribute to species, genus, family, and order; columns matched at
+genus contribute to genus, family, and order; family-level columns to
+family and order; order-level columns to order only.
 
-Columns assigned at species level contribute to species, genus, family,
-and order summaries; columns matched at genus level contribute to genus,
-family, and order; family-level columns contribute to family and order;
-order-level columns contribute only to order. Genus, family, and order
-for each species-level column are derived from the first whitespace-
-separated token (genus) and then looked up in
-\code{plant_summary$genus}.
+For each species-level column, the parent genus, family, and order are
+obtained from the species' row in \code{lookup} (first occurrence retained
+when a species spans multiple rows). For each genus-level column, the
+parent family and order are obtained by deduplicating \code{lookup} by
+\code{Genus} and taking the first occurrence. For each family-level column,
+order is obtained the same way.
+
+The \verb{*_in_lookup} flag on each higher-rank output indicates whether the
+rolled-up taxon name (e.g., the genus name a species rolls up to) exists
+in the corresponding lookup column.
 }
