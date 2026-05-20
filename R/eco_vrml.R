@@ -1,3 +1,81 @@
+#' Vector ruggedness measure (VRM)
+#'
+#' Computes the vector ruggedness measure (VRM) of Sappington et al. (2007),
+#' quantifying terrain ruggedness as the three-dimensional dispersion of unit
+#' vectors orthogonal to the terrain surface within a focal window.
+#'
+#' @param x A `terra::SpatRaster` representing a digital elevation model (DEM).
+#' @param s Odd integer (or length-2 vector of odd integers) giving the focal
+#'   window size in rows and columns.
+#'
+#' @return A `terra::SpatRaster` of vector ruggedness values, bounded between
+#'   0 (flat) and 1 (maximally rugged).
+#'
+#' @details
+#' VRM integrates variation in both slope and aspect into a single
+#' dimensionless measure of surface heterogeneity that is less correlated
+#' with slope than traditional ruggedness indices. This allows ruggedness
+#' and slope to be treated as separate ecological predictors.
+#'
+#' This implementation is a direct port of `spatialEco::vrm()`, reproduced
+#' here so that `ecologytools` does not need to depend on `spatialEco`. The
+#' algorithm, defaults, and output are identical.
+#'
+#' @references
+#' Sappington, J. M., K. M. Longshore, and D. B. Thompson. 2007.
+#' Quantifying landscape ruggedness for animal habitat analysis:
+#' a case study using bighorn sheep in the Mojave Desert.
+#' *Journal of Wildlife Management* 71:1419–1426.
+#' https://doi.org/10.2193/2005-723
+#'
+#' @examples
+#' \dontrun{
+#' library(terra)
+#'
+#' r <- rast(nrows = 100, ncols = 100, xmin = 0, xmax = 100, ymin = 0, ymax = 100)
+#' xy <- as.data.frame(crds(r))
+#' z <- with(
+#'   xy,
+#'   800 +
+#'     250 * exp(-((x - 30)^2 + (y - 35)^2) / 250) +
+#'     180 * exp(-((x - 70)^2 + (y - 65)^2) / 180)
+#' )
+#' values(r) <- z
+#'
+#' out <- vrm(r, s = 5)
+#' plot(out)
+#' }
+#'
+#' @export
+vrm <- function (x, s)
+{
+  if (!inherits(x, "SpatRaster"))
+    stop(deparse(substitute(x)), " must be a terra SpatRaster object")
+  if (length(s) > 2)
+    stop("Specified window exceeds 2 dimensions")
+  if (any((s%%2) == 0))
+    stop("Specified window must be odd number(s)")
+  if (length(s) == 1)
+    s = rep(s, 2)
+  vrm.fun <- function(x, y, z) {
+    sqrt((x^2) + (y^2) + (z^2))
+  }
+  f = matrix(1, s[1], s[2])
+  scale.factor <- round(s[1] * s[2], 0)
+  sa <- terra::terrain(x, v = c("slope", "aspect"), unit = "radians",
+                       neighbors = 8)
+  sin.slp <- terra::app(sa[["slope"]], fun = sin)
+  cos.slp <- terra::app(sa[["slope"]], fun = cos)
+  sin.asp <- terra::app(sa[["aspect"]], fun = sin) * sin.slp
+  cos.asp <- terra::app(sa[["aspect"]], fun = cos) * sin.slp
+  x.sum <- terra::focal(sin.asp, w = f, fun = sum)
+  y.sum <- terra::focal(cos.asp, w = f, fun = sum)
+  z.sum <- terra::focal(cos.slp, w = f, fun = sum)
+  r <- terra::lapp(c(x.sum, y.sum, z.sum), fun = vrm.fun)
+  return(1 - (r/scale.factor))
+}
+
+
 #' Vector ruggedness of local relief (VRML)
 #'
 #' Computes a local-relief version of the vector ruggedness measure (VRM)
@@ -22,10 +100,10 @@
 #' using a focal mean filter and subtracting the original DEM. This isolates
 #' fine-scale (local) topographic variation by removing broad-scale elevation
 #' trends. Vector ruggedness is then computed on this residual surface using
-#' `spatialEco::vrm()`.
+#' [vrm()].
 #'
 #' As a result:
-#' - `spatialEco::vrm()` measures total terrain heterogeneity across scales
+#' - [vrm()] measures total terrain heterogeneity across scales
 #'   present in the DEM.
 #' - `vrml()` emphasizes *local relief* by removing low-frequency structure
 #'   (e.g., large slopes or elevational gradients) prior to calculating
@@ -68,53 +146,19 @@
 #' }
 #'
 #' @export
-
-vrm <- function (x, s)
-{
-  if (!inherits(x, "SpatRaster"))
-    stop(deparse(substitute(x)), " must be a terra SpatRaster object")
-  if (length(s) > 2)
-    stop("Specified window exceeds 2 dimensions")
-  if (any((s%%2) == 0))
-    stop("Specified window must be odd number(s)")
-  if (length(s) == 1)
-    s = rep(s, 2)
-  vrm.fun <- function(x, y, z) {
-    sqrt((x^2) + (y^2) + (z^2))
-  }
-  f = matrix(1, s[1], s[2])
-  scale.factor <- round(s[1] * s[2], 0)
-  sa <- terra::terrain(x, v = c("slope", "aspect"), unit = "radians",
-                       neighbors = 8)
-  sin.slp <- terra::app(sa[["slope"]], fun = sin)
-  cos.slp <- terra::app(sa[["slope"]], fun = cos)
-  sin.asp <- terra::app(sa[["aspect"]], fun = sin) * sin.slp
-  cos.asp <- terra::app(sa[["aspect"]], fun = cos) * sin.slp
-  x.sum <- terra::focal(sin.asp, w = f, fun = sum)
-  y.sum <- terra::focal(cos.asp, w = f, fun = sum)
-  z.sum <- terra::focal(cos.slp, w = f, fun = sum)
-  r <- terra::lapp(c(x.sum, y.sum, z.sum), fun = vrm.fun)
-  return(1 - (r/scale.factor))
-}
-
 vrml <- function(x, s) {
   stopifnot(inherits(x, "SpatRaster"))
   stopifnot(is.numeric(s), length(s) == 1, !is.na(s), s > 0)
-
   if (s %% 2 != 1) {
     stop("s must be an odd integer.")
   }
-
   smooth <- terra::focal(
     x = x,
     w = s,
     fun = "mean",
     na.policy = "omit"
   )
-
   diff <- smooth - x
-
   out <- vrm(diff, s = s)
-
   out
 }

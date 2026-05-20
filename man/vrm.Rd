@@ -2,73 +2,50 @@
 % Please edit documentation in R/eco_vrml.R
 \name{vrm}
 \alias{vrm}
-\title{Vector ruggedness of local relief (VRML)}
+\title{Vector ruggedness measure (VRM)}
 \usage{
 vrm(x, s)
 }
 \arguments{
 \item{x}{A \code{terra::SpatRaster} representing a digital elevation model (DEM).}
 
-\item{s}{Odd integer giving the focal window size.}
+\item{s}{Odd integer (or length-2 vector of odd integers) giving the focal
+window size in rows and columns.}
 }
 \value{
-A \code{terra::SpatRaster} of vector ruggedness values representing
-local-scale terrain heterogeneity.
+A \code{terra::SpatRaster} of vector ruggedness values, bounded between
+0 (flat) and 1 (maximally rugged).
 }
 \description{
-Computes a local-relief version of the vector ruggedness measure (VRM)
-by first removing broad-scale topography and then quantifying fine-scale
-terrain heterogeneity.
+Computes the vector ruggedness measure (VRM) of Sappington et al. (2007),
+quantifying terrain ruggedness as the three-dimensional dispersion of unit
+vectors orthogonal to the terrain surface within a focal window.
 }
 \details{
-The standard vector ruggedness measure (VRM; Sappington et al. 2007)
-quantifies terrain ruggedness as the three-dimensional dispersion of
-vectors orthogonal to the terrain surface, integrating variation in both
-slope and aspect. This produces a dimensionless measure of surface
-heterogeneity that is less correlated with slope than traditional
-ruggedness indices.
+VRM integrates variation in both slope and aspect into a single
+dimensionless measure of surface heterogeneity that is less correlated
+with slope than traditional ruggedness indices. This allows ruggedness
+and slope to be treated as separate ecological predictors.
 
-The \code{vrml()} function modifies this approach by first smoothing the DEM
-using a focal mean filter and subtracting the original DEM. This isolates
-fine-scale (local) topographic variation by removing broad-scale elevation
-trends. Vector ruggedness is then computed on this residual surface using
-\code{spatialEco::vrm()}.
-
-As a result:
-\itemize{
-\item \code{spatialEco::vrm()} measures total terrain heterogeneity across scales
-present in the DEM.
-\item \code{vrml()} emphasizes \emph{local relief} by removing low-frequency structure
-(e.g., large slopes or elevational gradients) prior to calculating
-ruggedness.
-}
-
-This distinction is important because VRM captures variation in slope and
-aspect independent of overall gradient, allowing ruggedness and slope to
-be treated as separate ecological predictors. By
-applying VRM to a detrended surface, \code{vrml()} further isolates microtopographic
-complexity that may be more relevant to processes operating at finer spatial
-scales (e.g., movement constraints, microhabitat selection).
+This implementation is a direct port of \code{spatialEco::vrm()}, reproduced
+here so that \code{ecologytools} does not need to depend on \code{spatialEco}. The
+algorithm, defaults, and output are identical.
 }
 \examples{
 \dontrun{
 library(terra)
 
 r <- rast(nrows = 100, ncols = 100, xmin = 0, xmax = 100, ymin = 0, ymax = 100)
-
 xy <- as.data.frame(crds(r))
 z <- with(
   xy,
   800 +
     250 * exp(-((x - 30)^2 + (y - 35)^2) / 250) +
-    180 * exp(-((x - 70)^2 + (y - 65)^2) / 180) -
-    120 * exp(-((x - 55)^2 + (y - 45)^2) / 120) +
-    60 * sin(x / 8) * cos(y / 10)
+    180 * exp(-((x - 70)^2 + (y - 65)^2) / 180)
 )
-
 values(r) <- z
 
-out <- vrml(r, s = 5)
+out <- vrm(r, s = 5)
 plot(out)
 }
 
