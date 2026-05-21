@@ -2,30 +2,32 @@
 % Please edit documentation in R/nutrition_plant_summary.R
 \name{plant_quality_summary}
 \alias{plant_quality_summary}
-\title{Summarize plant forage quality at species, genus, family, and order levels}
+\title{Summarize plant forage quality at species, genus, family, functional group,
+and growth form levels}
 \usage{
 plant_quality_summary(data)
 }
 \arguments{
 \item{data}{A data frame containing \code{DE}, \code{DP}, \code{DMD}, and at least one of
-\code{Code}, \code{Genus}, \code{Family}, or \code{Order}. May optionally contain
-\code{Scientific.Name}, \code{Phenology}, and \code{Part}.}
+\code{Code}, \code{Genus}, \code{Family}, \code{Functional.Group}, or \code{Growth.Form}. May
+optionally contain \code{Scientific.Name}, \code{Phenology}, and \code{Part}.}
 }
 \value{
-A named list with elements \code{species}, \code{genus}, \code{family}, \code{order}.
-Each is either a tibble of summaries or \code{NULL} if the corresponding
-taxonomic column was absent from \code{data}.
+A named list with elements \code{species}, \code{genus}, \code{family},
+\code{functional_group}, \code{growth_form}. Each is either a tibble of summaries
+or \code{NULL} if the corresponding column was absent from \code{data}.
 }
 \description{
 Computes mean, standard deviation, and non-NA sample size for digestible
 energy (DE), digestible protein (DP), and dry matter digestibility (DMD)
-at up to four taxonomic resolutions. Higher-level summaries are computed
-directly from the raw input rows. Where a higher-level taxon spans
-multiple parent values, the first occurrence is retained.
+at up to five resolutions. Higher-level summaries are computed directly
+from the raw input rows. Where a higher-level grouping spans multiple
+parent values, the first occurrence is retained.
 }
 \details{
-Taxonomic levels (\code{Code}/\code{Scientific.Name}, \code{Genus}, \code{Family}, \code{Order}) and
-optional grouping columns (\code{Phenology}, \code{Part}) are used only if present in
-\code{data}. At least one of \code{Code}, \code{Genus}, \code{Family}, or \code{Order} must be
+Grouping levels (\code{Code}/\code{Scientific.Name}, \code{Genus}, \code{Family},
+\code{Functional.Group}, \code{Growth.Form}) and optional grouping columns
+(\code{Phenology}, \code{Part}) are used only if present in \code{data}. At least one of
+\code{Code}, \code{Genus}, \code{Family}, \code{Functional.Group}, or \code{Growth.Form} must be
 present. Levels not represented in the data are returned as \code{NULL}.
 }
