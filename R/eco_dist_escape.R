@@ -5,9 +5,13 @@
 #'
 #' @param dem A `terra::SpatRaster` representing elevation.
 #' @param escape_slope Numeric scalar giving the slope threshold in degrees.
+#' @param maxdist Numeric scalar giving the maximum distance (in map units,
+#' typically meters) over which to compute distance. Cells farther than
+#' `maxdist` from the nearest escape-terrain cell are returned as `NA`.
+#' Defaults to 4000 meters. Set to `NA` to compute distances without a cap.
 #'
 #' @return A `terra::SpatRaster` giving the distance in meters from each cell
-#' to the nearest escape-terrain cell.
+#' to the nearest escape-terrain cell. Cells beyond `maxdist` are `NA`.
 #'
 #' @details
 #' Slope is calculated from the input DEM using `terra::terrain()` with
@@ -28,21 +32,17 @@
 #'
 #' @export
 
-dist_escape <- function(dem, escape_slope) {
+dist_escape <- function(dem, escape_slope, maxdist = 4000) {
   stopifnot(inherits(dem, "SpatRaster"))
   stopifnot(is.numeric(escape_slope), length(escape_slope) == 1, !is.na(escape_slope))
-
   slope <- terra::terrain(dem, v = "slope", unit = "degrees", neighbors = 8)
   escape <- slope >= escape_slope
   escape_for_dist <- terra::ifel(escape, 1, NA)
-
   n_escape <- terra::global(!is.na(escape_for_dist), "sum", na.rm = TRUE)[1, 1]
-
   if (is.na(n_escape) || n_escape == 0) {
     stop("No cells meet or exceed escape_slope; cannot compute distance to escape terrain.")
   }
-
-  dist_m <- terra::distance(escape_for_dist)
+  dist_m <- terra::distance(escape_for_dist, maxdist = maxdist)
   names(dist_m) <- "dist_escape_m"
   dist_m
 }

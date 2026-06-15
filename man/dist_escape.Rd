@@ -4,16 +4,21 @@
 \alias{dist_escape}
 \title{Distance to escape terrain}
 \usage{
-dist_escape(dem, escape_slope)
+dist_escape(dem, escape_slope, maxdist = 4000)
 }
 \arguments{
 \item{dem}{A \code{terra::SpatRaster} representing elevation.}
 
 \item{escape_slope}{Numeric scalar giving the slope threshold in degrees.}
+
+\item{maxdist}{Numeric scalar giving the maximum distance (in map units,
+typically meters) over which to compute distance. Cells farther than
+\code{maxdist} from the nearest escape-terrain cell are returned as \code{NA}.
+Defaults to 4000 meters. Set to \code{NA} to compute distances without a cap.}
 }
 \value{
 A \code{terra::SpatRaster} giving the distance in meters from each cell
-to the nearest escape-terrain cell.
+to the nearest escape-terrain cell. Cells beyond \code{maxdist} are \code{NA}.
 }
 \description{
 Calculates the distance from each raster cell to the nearest cell meeting
