@@ -1,0 +1,94 @@
+# Vector ruggedness of local relief (VRML)
+
+Computes a local-relief version of the vector ruggedness measure (VRM)
+by first removing broad-scale topography and then quantifying fine-scale
+terrain heterogeneity.
+
+## Usage
+
+``` r
+vrml(x, s)
+```
+
+## Arguments
+
+- x:
+
+  A
+  [`terra::SpatRaster`](https://rspatial.github.io/terra/reference/SpatRaster-class.html)
+  representing a digital elevation model (DEM).
+
+- s:
+
+  Odd integer giving the focal window size.
+
+## Value
+
+A
+[`terra::SpatRaster`](https://rspatial.github.io/terra/reference/SpatRaster-class.html)
+of vector ruggedness values representing local-scale terrain
+heterogeneity.
+
+## Details
+
+The standard vector ruggedness measure (VRM; Sappington et al. 2007)
+quantifies terrain ruggedness as the three-dimensional dispersion of
+vectors orthogonal to the terrain surface, integrating variation in both
+slope and aspect. This produces a dimensionless measure of surface
+heterogeneity that is less correlated with slope than traditional
+ruggedness indices.
+
+The `vrml()` function modifies this approach by first smoothing the DEM
+using a focal mean filter and subtracting the original DEM. This
+isolates fine-scale (local) topographic variation by removing
+broad-scale elevation trends. Vector ruggedness is then computed on this
+residual surface using
+[`vrm()`](https://ryanmartinecology.github.io/ecologytools/reference/vrm.md).
+
+As a result:
+
+- [`vrm()`](https://ryanmartinecology.github.io/ecologytools/reference/vrm.md)
+  measures total terrain heterogeneity across scales present in the DEM.
+
+- `vrml()` emphasizes *local relief* by removing low-frequency structure
+  (e.g., large slopes or elevational gradients) prior to calculating
+  ruggedness.
+
+This distinction is important because VRM captures variation in slope
+and aspect independent of overall gradient, allowing ruggedness and
+slope to be treated as separate ecological predictors. By applying VRM
+to a detrended surface, `vrml()` further isolates microtopographic
+complexity that may be more relevant to processes operating at finer
+spatial scales (e.g., movement constraints, microhabitat selection).
+
+## References
+
+Sappington, J. M., K. M. Longshore, and D. B. Thompson. 2007.
+Quantifying landscape ruggedness for animal habitat analysis: a case
+study using bighorn sheep in the Mojave Desert. *Journal of Wildlife
+Management* 71:1419–1426. https://doi.org/10.2193/2005-723
+
+## Examples
+
+``` r
+if (FALSE) { # \dontrun{
+library(terra)
+
+r <- rast(nrows = 100, ncols = 100, xmin = 0, xmax = 100, ymin = 0, ymax = 100)
+
+xy <- as.data.frame(crds(r))
+z <- with(
+  xy,
+  800 +
+    250 * exp(-((x - 30)^2 + (y - 35)^2) / 250) +
+    180 * exp(-((x - 70)^2 + (y - 65)^2) / 180) -
+    120 * exp(-((x - 55)^2 + (y - 45)^2) / 120) +
+    60 * sin(x / 8) * cos(y / 10)
+)
+
+values(r) <- z
+
+out <- vrml(r, s = 5)
+plot(out)
+} # }
+```

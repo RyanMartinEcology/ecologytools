@@ -1,0 +1,71 @@
+# Vector ruggedness measure (VRM)
+
+Computes the vector ruggedness measure (VRM) of Sappington et al.
+(2007), quantifying terrain ruggedness as the three-dimensional
+dispersion of unit vectors orthogonal to the terrain surface within a
+focal window.
+
+## Usage
+
+``` r
+vrm(x, s)
+```
+
+## Arguments
+
+- x:
+
+  A
+  [`terra::SpatRaster`](https://rspatial.github.io/terra/reference/SpatRaster-class.html)
+  representing a digital elevation model (DEM).
+
+- s:
+
+  Odd integer (or length-2 vector of odd integers) giving the focal
+  window size in rows and columns.
+
+## Value
+
+A
+[`terra::SpatRaster`](https://rspatial.github.io/terra/reference/SpatRaster-class.html)
+of vector ruggedness values, bounded between 0 (flat) and 1 (maximally
+rugged).
+
+## Details
+
+VRM integrates variation in both slope and aspect into a single
+dimensionless measure of surface heterogeneity that is less correlated
+with slope than traditional ruggedness indices. This allows ruggedness
+and slope to be treated as separate ecological predictors.
+
+This implementation is a direct port of `spatialEco::vrm()`, reproduced
+here so that `ecologytools` does not need to depend on `spatialEco`. The
+algorithm, defaults, and output are identical.
+
+## References
+
+Sappington, J. M., K. M. Longshore, and D. B. Thompson. 2007.
+Quantifying landscape ruggedness for animal habitat analysis: a case
+study using bighorn sheep in the Mojave Desert. *Journal of Wildlife
+Management* 71:1419–1426. https://doi.org/10.2193/2005-723
+
+## Examples
+
+``` r
+if (FALSE) { # \dontrun{
+library(terra)
+
+r <- rast(nrows = 100, ncols = 100, xmin = 0, xmax = 100, ymin = 0, ymax = 100)
+xy <- as.data.frame(crds(r))
+z <- with(
+  xy,
+  800 +
+    250 * exp(-((x - 30)^2 + (y - 35)^2) / 250) +
+    180 * exp(-((x - 70)^2 + (y - 65)^2) / 180)
+)
+values(r) <- z
+
+out <- vrm(r, s = 5)
+plot(out)
+} # }
+```
