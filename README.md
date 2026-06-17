@@ -2,7 +2,7 @@
 
 <img src="man/figures/ecologytools.svg" alt="ecologytools logo" width="200"/>
 
-# ecologytools
+# `ecologytools`
 
 **Utilities and data-visualization tools for ecology in R**
 
@@ -72,39 +72,39 @@ library(ecologytools)
 biomass_data <- data.frame(
   patch_id = c("A", "A", "A", "B", "B", "B"),
   plant_id = c("Vaccinium", "Carex", "Salix", "Vaccinium", "Carex", "Salix"),
-  biomass  = c(120, 80, 45, 60, 150, 30),
-  area     = 900
+  biomass = c(120, 80, 45, 60, 150, 30),
+  area = 900
 )
 
 # Nutritional values: one row per plant_id
 nutrition_data <- data.frame(
-  plant_id        = c("Vaccinium", "Carex", "Salix"),
-  de              = c(12.5, 9.8, 11.2),   # kJ/g
-  dp              = c(9.0, 5.5, 8.1),     # g / 100 g
+  plant_id = c("Vaccinium", "Carex", "Salix"),
+  de = c(12.5, 9.8, 11.2), # kJ/g
+  dp = c(9.0, 5.5, 8.1), # g / 100 g
   diet_proportion = c(0.5, 0.3, 0.2)
 )
 
 result <- fresh(
-  biomass_data   = biomass_data,
+  biomass_data = biomass_data,
   nutrition_data = nutrition_data,
-  animal_de_req  = 11.5,   # minimum diet DE (kJ/g)
-  animal_dp_req  = 7.5,    # minimum diet DP (g / 100 g)
-  animal_dmi     = 1500    # daily dry matter intake (g/day)
+  animal_de_req = 11.5, # minimum diet DE (kJ/g)
+  animal_dp_req = 7.5, # minimum diet DP (g / 100 g)
+  animal_dmi = 1500 # daily dry matter intake (g/day)
 )
 
-result           # S3 print method: quick FRESH summary
-result$summary   # suitable biomass, animal-days, limiting constraint, etc.
-result$detail    # biomass used and proportions per forage
+result # S3 print method: quick FRESH summary
+result$summary # suitable biomass, animal-days, limiting constraint, etc.
+result$detail # biomass used and proportions per forage
 
 #---------------------------------------
 # 2. Multiple constraint pairs at once
 #---------------------------------------
 # Passing vectors solves each (de_req, dp_req) pair as a separate scenario.
 multi <- fresh(
-  biomass_data   = biomass_data,
+  biomass_data = biomass_data,
   nutrition_data = nutrition_data,
-  animal_de_req  = c(10.5, 11.5, 12.5),
-  animal_dp_req  = c(6.0, 7.5, 9.0)
+  animal_de_req = c(10.5, 11.5, 12.5),
+  animal_dp_req = c(6.0, 7.5, 9.0)
 )
 multi$summary
 ```
@@ -263,13 +263,13 @@ ggplot(df_temp, aes(x, y, fill = temp)) +
 ```r
 library(ecologytools)
 
-pal("discrete")        # full discrete palette (hex vector)
+pal("discrete") # full discrete palette (hex vector)
 pal("discrete", n = 3) # first 3 discrete colors
-pal("plants")          # named functional-group colors
-pal("base")            # list of white / black / grid utility colors
-pal("temp")            # a continuous gradient's stops
+pal("plants") # named functional-group colors
+pal("base") # list of white / black / grid utility colors
+pal("temp") # a continuous gradient's stops
 
-pal_continuous_n(256)  # 256 colors interpolated from the "cont" gradient
+pal_continuous_n(256) # 256 colors interpolated from the "cont" gradient
 ```
 
 </details>
@@ -461,16 +461,16 @@ res$All
 ```r
 library(ecologytools)
 forage <- data.frame(
-  Code             = c("VACMEM", "VACMEM", "CARGEY", "CARGEY"),
-  Scientific.Name  = c("Vaccinium membranaceum", "Vaccinium membranaceum",
+  Code = c("VACMEM", "VACMEM", "CARGEY", "CARGEY"),
+  Scientific.Name = c("Vaccinium membranaceum", "Vaccinium membranaceum",
                        "Carex geyeri", "Carex geyeri"),
-  Genus            = c("Vaccinium", "Vaccinium", "Carex", "Carex"),
-  Family           = c("Ericaceae", "Ericaceae", "Cyperaceae", "Cyperaceae"),
+  Genus = c("Vaccinium", "Vaccinium", "Carex", "Carex"),
+  Family = c("Ericaceae", "Ericaceae", "Cyperaceae", "Cyperaceae"),
   Functional.Group = c("DECIDUOUS SHRUB", "DECIDUOUS SHRUB", "GRAMINOID", "GRAMINOID"),
-  Growth.Form      = c("SHRUB", "SHRUB", "GRAMINOID", "GRAMINOID"),
-  DE  = c(12.1, 11.8, 9.5, 9.9),   # digestible energy
-  DP  = c(8.8, 9.2, 5.4, 5.8),     # digestible protein
-  DMD = c(0.62, 0.60, 0.55, 0.57)  # dry matter digestibility
+  Growth.Form = c("SHRUB", "SHRUB", "GRAMINOID", "GRAMINOID"),
+  DE = c(12.1, 11.8, 9.5, 9.9), # digestible energy
+  DP = c(8.8, 9.2, 5.4, 5.8), # digestible protein
+  DMD = c(0.62, 0.60, 0.55, 0.57) # dry matter digestibility
 )
 # mean, sd, and non-NA n for DE/DP/DMD at each available level
 summaries <- plant_quality_summary(forage)
@@ -488,15 +488,15 @@ library(ecologytools)
 # sample-by-taxon relative read abundance (RRA); rows already normalized
 rra <- data.frame(
   "Vaccinium membranaceum" = c(0.5, 0.2),
-  "Carex geyeri"           = c(0.3, 0.5),
-  "Pinaceae"               = c(0.2, 0.3),
+  "Carex geyeri" = c(0.3, 0.5),
+  "Pinaceae" = c(0.2, 0.3),
   check.names = FALSE
 )
 lookup <- data.frame(
   Scientific.Name = c("Vaccinium membranaceum", "Carex geyeri"),
-  Genus           = c("Vaccinium", "Carex"),
-  Family          = c("Ericaceae", "Cyperaceae"),
-  Order           = c("Ericales", "Poales")
+  Genus = c("Vaccinium", "Carex"),
+  Family = c("Ericaceae", "Cyperaceae"),
+  Order = c("Ericales", "Poales")
 )
 props <- calc_diet_prop(rra, lookup)
 props$species
@@ -529,14 +529,14 @@ mode <- calc_phenology_mode(dat, length = 14)
 #   each row summing to 1.
 
 out <- calc_diet_quality(
-  rra      = rra,
-  qual     = qual,
-  mode     = mode,
-  lookup   = lookup,
+  rra = rra,
+  qual = qual,
+  mode = mode,
+  lookup = lookup,
   meta_cols = c("sample_id", "animal_id", "date", "year", "UTME", "UTMN")
 )
-out$quality   # per-sample DP, DE, and coverage
-out$dropped   # audit of taxa excluded from each sample, with reasons
+out$quality # per-sample DP, DE, and coverage
+out$dropped # audit of taxa excluded from each sample, with reasons
 ```
 
 </details>
@@ -562,10 +562,6 @@ result <- time_it(Sys.sleep(1), label = "short nap")
 ```r
 library(ecologytools)
 # prints R version, platform, and versions of attached packages
-package_info()
-```
-
-</details>
 package_info()
 ```
 
