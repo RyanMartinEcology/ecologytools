@@ -26,7 +26,8 @@ devtools::install_github("RyanMartinEcology/ecologytools")
 library(ecologytools)
 ```
 
-# FRESH: Forage Resource Evaluation [fresh()]
+<details>
+<summary><b>FRESH: Forage Resource Evaluation System for Habitat <code>fresh()</code></b></summary>
 
 `fresh()` computes the maximum suitable forage biomass that meets minimum
 digestible energy (DE) and digestible protein (DP) concentration constraints for
@@ -82,7 +83,10 @@ multi <- fresh(
 multi$summary
 ```
 
-# Plot Utility Examples
+</details>
+
+<details>
+<summary><b>Plot Utility Examples</b></summary>
 
 ```r
 library(ggplot2)
@@ -221,7 +225,10 @@ ggplot(df_temp, aes(x, y, fill = temp)) +
   theme_martin()
 ```
 
-## Palette Accessors [pal(), pal_continuous_n()]
+</details>
+
+<details>
+<summary><b>Palette Accessors <code>pal()</code>, <code>pal_continuous_n()</code></b></summary>
 
 ```r
 library(ecologytools)
@@ -235,9 +242,12 @@ pal("temp")            # a continuous gradient's stops
 pal_continuous_n(256)  # 256 colors interpolated from the "cont" gradient
 ```
 
+</details>
+
 # Spatial Utilities
 
-## Distance to Escape Terrain [dist_escape()]
+<details>
+<summary><b>Distance to Escape Terrain <code>dist_escape()</code></b></summary>
 
 ```r
 library(terra)
@@ -257,7 +267,10 @@ d <- dist_escape(r, escape_slope = 65)
 plot(d, main = "Distance to escape terrain")
 ```
 
-## Vector Ruggedness Measure - Local (VRML) [vrml()]
+</details>
+
+<details>
+<summary><b>Vector Ruggedness Measure - Local (VRML) <code>vrml()</code></b></summary>
 
 ```r
 library(ecologytools)
@@ -279,7 +292,10 @@ rug <- vrml(r, s = 5)
 plot(rug, main = "Vector Ruggedness of Local Relief")
 ```
 
-## Days Since Peak IRG [days_since_peak_IRG()]
+</details>
+
+<details>
+<summary><b>Days Since Peak IRG <code>days_since_peak_IRG()</code></b></summary>
 
 ```r
 library(ecologytools)
@@ -295,7 +311,10 @@ out_abs <- days_since_peak_IRG(r, absolute_value = TRUE)
 plot(out, main = "Days Since Peak IRG")
 ```
 
-## Aggregate Raster [aggregate_raster()]
+</details>
+
+<details>
+<summary><b>Aggregate Raster <code>aggregate_raster()</code></b></summary>
 
 ```r
 library(ecologytools)
@@ -309,7 +328,10 @@ out <- aggregate_raster(r, n = 3, fun = mean)
 plot(out, main = "Aggregated Raster")
 ```
 
-## Force a Raster Into Memory [force_inmemory()]
+</details>
+
+<details>
+<summary><b>Force a Raster Into Memory <code>force_inmemory()</code></b></summary>
 
 ```r
 library(ecologytools)
@@ -323,7 +345,10 @@ inMemory(r)
 # saveRDS(wrap(r), "raster.rds")
 ```
 
-## Raster Summary [raster_summary()]
+</details>
+
+<details>
+<summary><b>Raster Summary <code>raster_summary()</code></b></summary>
 
 ```r
 library(ecologytools)
@@ -336,7 +361,10 @@ raster_summary(r, name = "example_raster")
 raster_summary(wrap(r), name = "packed_raster")
 ```
 
-## Cluster GPS Locations into Search Areas [sheep_cluster()]
+</details>
+
+<details>
+<summary><b>Cluster GPS Locations into Search Areas <code>sheep_cluster()</code></b></summary>
 
 ```r
 library(ecologytools)
@@ -364,9 +392,12 @@ areas <- sheep_cluster(
 areas
 ```
 
+</details>
+
 # Forage & Diet Tools
 
-## Modal Phenology by Period [calc_phenology_mode()]
+<details>
+<summary><b>Modal Phenology by Period <code>calc_phenology_mode()</code></b></summary>
 
 ```r
 library(ecologytools)
@@ -388,7 +419,10 @@ res$Genus
 res$All
 ```
 
-## Plant Forage-Quality Summaries [plant_quality_summary()]
+</details>
+
+<details>
+<summary><b>Plant Forage-Quality Summaries <code>plant_quality_summary()</code></b></summary>
 
 ```r
 library(ecologytools)
@@ -410,7 +444,10 @@ summaries$species
 summaries$genus
 ```
 
-## Diet Proportions from RRA Data [calc_diet_prop()]
+</details>
+
+<details>
+<summary><b>Diet Proportions from RRA Data <code>calc_diet_prop()</code></b></summary>
 
 ```r
 library(ecologytools)
@@ -432,7 +469,10 @@ props$species
 props$genus
 ```
 
-## Weighted Diet Quality [calc_diet_quality()]
+</details>
+
+<details>
+<summary><b>Weighted Diet Quality <code>calc_diet_quality()</code></b></summary>
 
 `calc_diet_quality()` ties the diet pipeline together: it weights each taxon's
 stage-specific forage quality by its RRA to produce per-sample DP and DE. It
@@ -465,9 +505,12 @@ out$quality   # per-sample DP, DE, and coverage
 out$dropped   # audit of taxa excluded from each sample, with reasons
 ```
 
+</details>
+
 # Base Utilities
 
-## Time an Expression [time_it()]
+<details>
+<summary><b>Time an Expression <code>time_it()</code></b></summary>
 
 ```r
 library(ecologytools)
@@ -475,10 +518,15 @@ library(ecologytools)
 result <- time_it(Sys.sleep(1), label = "short nap")
 ```
 
-## Session Package Info [package_info()]
+</details>
+
+<details>
+<summary><b>Session Package Info <code>package_info()</code></b></summary>
 
 ```r
 library(ecologytools)
 # prints R version, platform, and versions of attached packages
 package_info()
 ```
+
+</details>
