@@ -1,6 +1,6 @@
 Package: ecologytools
 Title: Utilities and Data Visualization Tools for Ecology
-Version: 0.7
+Version: 1.0
 Authors@R: 
     person("Ryan", "Martin", email = "ryanmartin@uidaho.edu", role = c("aut", "cre"))
 Description: Provides custom functions, plotting utilities, and quantitative
