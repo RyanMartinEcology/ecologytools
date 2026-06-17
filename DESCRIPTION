@@ -1,33 +1,43 @@
 Package: ecologytools
 Title: Utilities and Data Visualization Tools for Ecology
-Version: 1.0
-Authors@R: 
+Version: 1.1
+Authors@R:
     person("Ryan", "Martin", email = "ryanmartin@uidaho.edu", role = c("aut", "cre"))
 Description: Provides custom functions, plotting utilities, and quantitative
-    tools for ecological data analysis and visualization. Includes the
-    theme_martin() ggplot2 theme for publication-style figures and the
+    tools for ecological data analysis and visualization. Plotting tools
+    include the theme_martin() ggplot2 theme and the Martin colour palettes
+    (pal(), scale_color_martin(), scale_fill_martin()) for publication-style
+    figures. Spatial and terrain utilities built on 'terra' provide raster
+    aggregation, days since peak instantaneous rate of green-up, distance to
+    escape terrain, vector ruggedness measures, raster summaries, and
+    in-memory packing of rasters, together with DBSCAN-based clustering of GPS
+    locations into search areas. Forage and diet tools include modal phenology
+    summaries, plant forage-quality and diet-proportion summaries, and the
     fresh() function for evaluating habitat-scale forage resources for
     generalist herbivores via linear programming.
 License: GPL-3
 Encoding: UTF-8
 LazyData: true
-Depends: 
+Depends:
     R (>= 4.5.0)
 Imports:
-    ggplot2,
-    ragg,
-    showtext,
-    grid,
-    terra,
     dbscan,
     dplyr,
-    lubridate,
-    rlang,
+    ggplot2,
+    grDevices,
+    graphics,
+    grid,
     lpSolve,
-    tibble
+    lubridate,
+    ragg,
+    rlang,
+    showtext,
+    stats,
+    terra,
+    tibble,
+    utils
 Suggests:
     ggtext,
     patchwork
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.3
-
