@@ -50,48 +50,71 @@
 
 raster_summary <- function(r, name = NULL) {
 
+  # ----------------------------------------------------------------------------------------------------------------------
+  # prepare the raster
+  # ----------------------------------------------------------------------------------------------------------------------
+
+  #1) capture the input class before any unwrapping
   input_class <- class(r)[1]
+
+  #2) unwrap a packed raster when needed
   r <- safe_unwrap(r)
 
+  # ----------------------------------------------------------------------------------------------------------------------
+  # gather summary values
+  # ----------------------------------------------------------------------------------------------------------------------
+
+  #1) read the extent as a plain numeric vector
   ext_vals <- as.vector(ext(r))
+
+  #2) compute the value range, tolerating read failures
   val_range <- tryCatch(
-    range(values(r), na.rm = TRUE),
+    expr = range(values(r), na.rm = T),
     error = function(e) c(NA, NA)
   )
 
+  #3) collect every reported property into a named list
   out <- list(
-    class    = input_class,
-    nlyr     = nlyr(r),
-    ncell    = ncell(r),
-    res      = res(r),
-    ext      = ext_vals,
-    crs      = crs(r, proj = TRUE),
-    source   = sources(r),
-    memory   = inMemory(r),
+    class = input_class,
+    nlyr = nlyr(r),
+    ncell = ncell(r),
+    res = res(r),
+    ext = ext_vals,
+    crs = crs(x = r, proj = T),
+    source = sources(r),
+    memory = inMemory(r),
     has_time = has.time(r),
-    range    = val_range
+    range = val_range
   )
 
-  cat("============================================================\n")
-  if (!is.null(name)) {
-    cat(sprintf("  Raster Summary: %s\n", name))
-    cat("------------------------------------------------------------\n")
-  } else {
-    cat("  Raster Summary\n")
-    cat("------------------------------------------------------------\n")
-  }
-  cat(sprintf("  %-15s %s\n",  "Class:",      out$class))
-  cat(sprintf("  %-15s %d\n",  "Layers:",     out$nlyr))
-  cat(sprintf("  %-15s %s\n",  "Cells:",      formatC(out$ncell, format = "d", big.mark = ",")))
-  cat(sprintf("  %-15s %.4f x %.4f\n", "Resolution:", out$res[1], out$res[2]))
-  cat(sprintf("  %-15s xmin: %-12.4f xmax: %.4f\n", "Extent:", ext_vals[1], ext_vals[2]))
-  cat(sprintf("  %-15s ymin: %-12.4f ymax: %.4f\n", "",         ext_vals[3], ext_vals[4]))
-  cat(sprintf("  %-15s %s\n",  "CRS:",        ifelse(nchar(out$crs) > 0, out$crs, "NA")))
-  cat(sprintf("  %-15s %s\n",  "Source:",     ifelse(nchar(out$source) > 0, out$source, "in memory")))
-  cat(sprintf("  %-15s %s\n",  "In memory:",  ifelse(out$memory, "yes", "no")))
-  cat(sprintf("  %-15s %s\n",  "Has time:",   ifelse(out$has_time, "yes", "no")))
-  cat(sprintf("  %-15s %.4f to %.4f\n", "Value range:", out$range[1], out$range[2]))
-  cat("============================================================\n")
+  # ----------------------------------------------------------------------------------------------------------------------
+  # print the summary
+  # ----------------------------------------------------------------------------------------------------------------------
 
+  #1) print the header, optionally labelled
+  cat('============================================================\n')
+  if (!is.null(name)) {
+    cat(sprintf('  Raster Summary: %s\n', name))
+    cat('------------------------------------------------------------\n')
+  } else {
+    cat('  Raster Summary\n')
+    cat('------------------------------------------------------------\n')
+  }
+
+  #2) print each reported property
+  cat(sprintf('  %-15s %s\n', 'Class:', out$class))
+  cat(sprintf('  %-15s %d\n', 'Layers:', out$nlyr))
+  cat(sprintf('  %-15s %s\n', 'Cells:', formatC(x = out$ncell, format = 'd', big.mark = ',')))
+  cat(sprintf('  %-15s %.4f x %.4f\n', 'Resolution:', out$res[1], out$res[2]))
+  cat(sprintf('  %-15s xmin: %-12.4f xmax: %.4f\n', 'Extent:', ext_vals[1], ext_vals[2]))
+  cat(sprintf('  %-15s ymin: %-12.4f ymax: %.4f\n', '', ext_vals[3], ext_vals[4]))
+  cat(sprintf('  %-15s %s\n', 'CRS:', ifelse(test = nchar(out$crs) > 0, yes = out$crs, no = 'NA')))
+  cat(sprintf('  %-15s %s\n', 'Source:', ifelse(test = nchar(out$source) > 0, yes = out$source, no = 'in memory')))
+  cat(sprintf('  %-15s %s\n', 'In memory:', ifelse(test = out$memory, yes = 'yes', no = 'no')))
+  cat(sprintf('  %-15s %s\n', 'Has time:', ifelse(test = out$has_time, yes = 'yes', no = 'no')))
+  cat(sprintf('  %-15s %.4f to %.4f\n', 'Value range:', out$range[1], out$range[2]))
+  cat('============================================================\n')
+
+  #3) return the summary values invisibly
   invisible(out)
 }

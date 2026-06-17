@@ -34,30 +34,51 @@
 #'
 #' @export
 
-days_since_peak_IRG <- function(x, absolute_value = FALSE) {
-  stopifnot(inherits(x, "SpatRaster"))
-  stopifnot(is.logical(absolute_value), length(absolute_value) == 1, !is.na(absolute_value))
+days_since_peak_IRG <- function(x, absolute_value = F) {
 
+  # ----------------------------------------------------------------------------------------------------------------------
+  # validate inputs
+  # ----------------------------------------------------------------------------------------------------------------------
+
+  #1) require a SpatRaster
+  stopifnot(inherits(x = x, what = 'SpatRaster'))
+
+  #2) require a single non-missing logical flag
+  stopifnot(
+    is.logical(absolute_value),
+    length(absolute_value) == 1,
+    !is.na(absolute_value)
+  )
+
+  #3) require at least two layers
   if (terra::nlyr(x) < 2) {
-    stop("x must have at least 2 layers.")
+    stop('x must have at least 2 layers.')
   }
 
-  # peak layer index for each cell
+  # ----------------------------------------------------------------------------------------------------------------------
+  # locate the per-cell peak
+  # ----------------------------------------------------------------------------------------------------------------------
+
+  #1) peak layer index for each cell
   peak_index <- terra::which.max(x)
 
-  # layer index raster stack
+  #2) layer index raster stack
   layer_index <- terra::rast(x)
-  terra::values(layer_index) <- rep(seq_len(terra::nlyr(x)), each = terra::ncell(x))
+  terra::values(layer_index) <- rep(x = seq_len(terra::nlyr(x)), each = terra::ncell(x))
 
-  # compute difference
+  # ----------------------------------------------------------------------------------------------------------------------
+  # compute time since peak
+  # ----------------------------------------------------------------------------------------------------------------------
+
+  #1) compute difference
   out <- layer_index - peak_index
 
-  # optional absolute value
+  #2) optional absolute value
   if (absolute_value) {
     out <- abs(out)
   }
 
-  names(out) <- paste0("days_since_peak_IRG_", seq_len(terra::nlyr(x)))
-
+  #3) label and return the result
+  names(out) <- paste0('days_since_peak_IRG_', seq_len(terra::nlyr(x)))
   out
 }

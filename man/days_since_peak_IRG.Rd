@@ -4,7 +4,7 @@
 \alias{days_since_peak_IRG}
 \title{Days since peak IRG}
 \usage{
-days_since_peak_IRG(x, absolute_value = FALSE)
+days_since_peak_IRG(x, absolute_value = F)
 }
 \arguments{
 \item{x}{A \code{terra::SpatRaster} with multiple layers ordered in time.}

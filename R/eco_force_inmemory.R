@@ -41,8 +41,9 @@
 #' @importFrom terra inMemory values
 #' @export
 
-
 force_inmemory <- function(r) {
+
+  #1) read values into memory only when not already resident
   if (!inMemory(r)) values(r) <- values(r)
   r
 }

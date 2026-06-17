@@ -30,13 +30,31 @@
 #' @export
 
 time_it <- function(expr, label = NULL) {
+
+  # ----------------------------------------------------------------------------------------------------------------------
+  # resolve the label
+  # ----------------------------------------------------------------------------------------------------------------------
+
+  #1) use the supplied label, else deparse the expression
   label <- if (!is.null(label)) label else base::deparse(base::substitute(expr))
-  base::cat(base::sprintf("  [%s] Starting: %s\n", base::format(base::Sys.time(), "%H:%M:%S"), label))
+
+  # ----------------------------------------------------------------------------------------------------------------------
+  # time the expression
+  # ----------------------------------------------------------------------------------------------------------------------
+
+  #1) announce the start
+  base::cat(base::sprintf('  [%s] Starting: %s\n', base::format(x = base::Sys.time(), format = '%H:%M:%S'), label))
+
+  #2) evaluate the expression and measure elapsed time
   t0 <- base::proc.time()
   result <- base::force(expr)
-  elapsed <- (base::proc.time() - t0)[["elapsed"]]
-  base::cat(base::sprintf("  [%s] Done: %s (%.2f seconds)\n",
-                          base::format(base::Sys.time(), "%H:%M:%S"), label, elapsed))
+  elapsed <- (base::proc.time() - t0)[['elapsed']]
+
+  #3) announce completion with the elapsed duration
+  base::cat(base::sprintf('  [%s] Done: %s (%.2f seconds)\n',
+                          base::format(x = base::Sys.time(), format = '%H:%M:%S'), label, elapsed))
+
+  #4) return the result invisibly
   base::invisible(result)
 }
 
@@ -74,17 +92,37 @@ time_it <- function(expr, label = NULL) {
 #' @export
 
 package_info <- function() {
+
+  # ----------------------------------------------------------------------------------------------------------------------
+  # collect session details
+  # ----------------------------------------------------------------------------------------------------------------------
+
+  #1) grab the attached (non-base) packages
   pkgs <- utils::sessionInfo()$otherPkgs
-  base::cat("============================================================\n")
-  base::cat("  Package Info\n")
-  base::cat(base::sprintf("  R version: %s\n", base::R.version$version.string))
-  base::cat(base::sprintf("  Platform:  %s\n", base::R.version$platform))
-  base::cat(base::sprintf("  Running:   %s\n", base::format(base::Sys.time(), "%Y-%m-%d %H:%M:%S")))
-  base::cat("------------------------------------------------------------\n")
-  base::cat("  Loaded packages:\n")
+
+  # ----------------------------------------------------------------------------------------------------------------------
+  # print the session header
+  # ----------------------------------------------------------------------------------------------------------------------
+
+  #1) print the version, platform, and run time
+  base::cat('============================================================\n')
+  base::cat('  Package Info\n')
+  base::cat(base::sprintf('  R version: %s\n', base::R.version$version.string))
+  base::cat(base::sprintf('  Platform:  %s\n', base::R.version$platform))
+  base::cat(base::sprintf('  Running:   %s\n', base::format(x = base::Sys.time(), format = '%Y-%m-%d %H:%M:%S')))
+
+  # ----------------------------------------------------------------------------------------------------------------------
+  # print the loaded packages
+  # ----------------------------------------------------------------------------------------------------------------------
+
+  #1) list each package and its version
+  base::cat('------------------------------------------------------------\n')
+  base::cat('  Loaded packages:\n')
   for (pkg in base::names(pkgs)) {
-    base::cat(base::sprintf("    %-25s %s\n", pkg, pkgs[[pkg]]$Version))
+    base::cat(base::sprintf('    %-25s %s\n', pkg, pkgs[[pkg]]$Version))
   }
-  base::cat("============================================================\n")
+  base::cat('============================================================\n')
+
+  #2) return the package list invisibly
   base::invisible(pkgs)
 }

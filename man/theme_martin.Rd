@@ -11,9 +11,9 @@ theme_martin(
   legend_position = c("right", "left", "top", "bottom"),
   facet_fill = c("sand", "teal", "none"),
   grid = c("off", "x", "y", "xy"),
-  full_box = FALSE,
+  full_box = F,
   axis_text_x_angle = 0,
-  publication = FALSE
+  publication = F
 )
 }
 \arguments{

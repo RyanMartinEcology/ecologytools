@@ -1,15 +1,3 @@
-# =============================================================================
-# S3 DISPLAY METHODS FOR NUTRITION FUNCTION OUTPUT CLASSES
-# =============================================================================
-# format() methods control the description shown in the RStudio Environment
-# pane. print() methods control console output when an object is typed or
-# explicitly printed.
-# =============================================================================
-
-
-# -----------------------------------------------------------------------------
-# fresh_output
-# -----------------------------------------------------------------------------
 
 #' Format method for fresh_output objects
 #'
@@ -25,11 +13,11 @@ format.fresh_output <- function(x, ...) {
   n_forages <- nrow(x$detail)
   area_unit <- x$inputs$output_area_unit
   paste0(
-    "FRESH output [",
-    n_patches, " patch(es), ",
-    n_forages, " forage(s), ",
-    "unit: ", area_unit,
-    "]"
+    'FRESH output [',
+    n_patches, ' patch(es), ',
+    n_forages, ' forage(s), ',
+    'unit: ', area_unit,
+    ']'
   )
 }
 
@@ -45,11 +33,11 @@ format.fresh_output <- function(x, ...) {
 #' @export
 
 print.fresh_output <- function(x, ...) {
-  cat("FRESH output\n")
-  cat("  Patches  :", nrow(x$summary), "\n")
-  cat("  Forages  :", nrow(x$detail),  "\n")
-  cat("  Area unit:", x$inputs$output_area_unit, "\n")
-  cat("\n$summary:\n")
+  cat('FRESH output\n')
+  cat('  Patches  :', nrow(x$summary), '\n')
+  cat('  Forages  :', nrow(x$detail), '\n')
+  cat('  Area unit:', x$inputs$output_area_unit, '\n')
+  cat('\n$summary:\n')
   print(x$summary)
   invisible(x)
 }

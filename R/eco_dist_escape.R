@@ -33,16 +33,51 @@
 #' @export
 
 dist_escape <- function(dem, escape_slope, maxdist = 4000) {
-  stopifnot(inherits(dem, "SpatRaster"))
-  stopifnot(is.numeric(escape_slope), length(escape_slope) == 1, !is.na(escape_slope))
-  slope <- terra::terrain(dem, v = "slope", unit = "degrees", neighbors = 8)
+
+  # ----------------------------------------------------------------------------------------------------------------------
+  # validate inputs
+  # ----------------------------------------------------------------------------------------------------------------------
+
+  #1) require a SpatRaster DEM
+  stopifnot(inherits(x = dem, what = 'SpatRaster'))
+
+  #2) require a single non-missing slope threshold
+  stopifnot(
+    is.numeric(escape_slope),
+    length(escape_slope) == 1,
+    !is.na(escape_slope)
+  )
+
+  # ----------------------------------------------------------------------------------------------------------------------
+  # identify escape terrain
+  # ----------------------------------------------------------------------------------------------------------------------
+
+  #1) derive slope in degrees from the DEM
+  slope <- terra::terrain(
+    x = dem,
+    v = 'slope',
+    unit = 'degrees',
+    neighbors = 8
+  )
+
+  #2) flag cells meeting or exceeding the threshold
   escape <- slope >= escape_slope
-  escape_for_dist <- terra::ifel(escape, 1, NA)
-  n_escape <- terra::global(!is.na(escape_for_dist), "sum", na.rm = TRUE)[1, 1]
+  escape_for_dist <- terra::ifel(test = escape, yes = 1, no = NA)
+
+  #3) require at least one escape-terrain cell
+  n_escape <- terra::global(x = !is.na(escape_for_dist), fun = 'sum', na.rm = T)[1, 1]
   if (is.na(n_escape) || n_escape == 0) {
-    stop("No cells meet or exceed escape_slope; cannot compute distance to escape terrain.")
+    stop('No cells meet or exceed escape_slope; cannot compute distance to escape terrain.')
   }
-  dist_m <- terra::distance(escape_for_dist, maxdist = maxdist)
-  names(dist_m) <- "dist_escape_m"
+
+  # ----------------------------------------------------------------------------------------------------------------------
+  # compute distance to escape terrain
+  # ----------------------------------------------------------------------------------------------------------------------
+
+  #1) measure distance to the nearest escape-terrain cell
+  dist_m <- terra::distance(x = escape_for_dist, maxdist = maxdist)
+
+  #2) label and return the result
+  names(dist_m) <- 'dist_escape_m'
   dist_m
 }

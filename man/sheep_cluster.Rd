@@ -12,9 +12,9 @@ sheep_cluster(
   epsilon = 100,
   crs = "EPSG:32612",
   filetype = "KML",
-  last.point = TRUE,
-  trace = TRUE,
-  basic.plot = FALSE
+  last.point = T,
+  trace = T,
+  basic.plot = F
 )
 }
 \arguments{

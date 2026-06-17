@@ -62,41 +62,56 @@ sheep_cluster <- function(GPS,
                           reference_date = Sys.time(),
                           minimum.points = 10,
                           epsilon = 100,
-                          crs = "EPSG:32612",
-                          filetype = "KML",
-                          last.point = TRUE,
-                          trace = TRUE,
-                          basic.plot = FALSE) {
+                          crs = 'EPSG:32612',
+                          filetype = 'KML',
+                          last.point = T,
+                          trace = T,
+                          basic.plot = F) {
 
-  required_cols <- c("x", "y", "ID", "DateTime")
-  missing_cols <- setdiff(required_cols, names(GPS))
+  # ----------------------------------------------------------------------------------------------------------------------
+  # validate inputs
+  # ----------------------------------------------------------------------------------------------------------------------
+
+  #1) require the expected columns
+  required_cols <- c('x', 'y', 'ID', 'DateTime')
+  missing_cols <- setdiff(x = required_cols, y = names(GPS))
   if (length(missing_cols) > 0) {
     stop(
-      "GPS is missing required columns: ",
-      paste(missing_cols, collapse = ", "),
-      call. = FALSE
+      'GPS is missing required columns: ',
+      paste(missing_cols, collapse = ', '),
+      call. = F
     )
   }
 
-  if (!inherits(GPS$DateTime, "POSIXct")) {
-    stop("GPS$DateTime must be a POSIXct column.", call. = FALSE)
+  #2) require a POSIXct datetime column
+  if (!inherits(x = GPS$DateTime, what = 'POSIXct')) {
+    stop('GPS$DateTime must be a POSIXct column.', call. = F)
   }
 
-  if (!inherits(reference_date, "POSIXct")) {
+  #3) coerce the reference date to POSIXct
+  if (!inherits(x = reference_date, what = 'POSIXct')) {
     reference_date <- as.POSIXct(reference_date)
   }
 
+  #4) require a usable reference date
   if (is.na(reference_date)) {
-    stop("reference_date could not be converted to POSIXct.", call. = FALSE)
+    stop('reference_date could not be converted to POSIXct.', call. = F)
   }
 
+  #5) require a supported output file type
   filetype <- toupper(filetype)
-  if (!filetype %in% c("KML", "GPX")) {
-    stop("filetype must be either 'KML' or 'GPX'.", call. = FALSE)
+  if (!filetype %in% c('KML', 'GPX')) {
+    stop("filetype must be either 'KML' or 'GPX'.", call. = F)
   }
 
+  #6) derive the output file extension
   file_ext <- tolower(filetype)
 
+  # ----------------------------------------------------------------------------------------------------------------------
+  # prepare and filter points
+  # ----------------------------------------------------------------------------------------------------------------------
+
+  #1) coerce columns and compute time since reference
   GPS <- dplyr::mutate(
     GPS,
     x = as.numeric(.data$x),
@@ -106,57 +121,70 @@ sheep_cluster <- function(GPS,
     Time.Difference = reference_date - .data$Date
   )
 
+  #2) keep observations within no.days before the reference date
   GPS_window <- dplyr::filter(
     GPS,
     .data$Time.Difference >= 0,
     .data$Time.Difference <= lubridate::days(no.days)
   )
 
+  #3) require at least one retained point
   if (nrow(GPS_window) == 0) {
     stop(
-      "No points remain after filtering by no.days and reference_date.",
-      call. = FALSE
+      'No points remain after filtering by no.days and reference_date.',
+      call. = F
     )
   }
 
+  #4) initialize optional outputs
   last.points <- NULL
   trace.out <- NULL
 
+  # ----------------------------------------------------------------------------------------------------------------------
+  # last locations
+  # ----------------------------------------------------------------------------------------------------------------------
+
+  #1) build, vectorize, and write last locations per individual
   if (isTRUE(last.point)) {
     last.points_df <- GPS_window |>
       dplyr::group_by(.data$ID) |>
-      dplyr::filter(.data$Date == max(.data$Date, na.rm = TRUE)) |>
+      dplyr::filter(.data$Date == max(.data$Date, na.rm = T)) |>
       dplyr::ungroup() |>
       dplyr::mutate(animalID = .data$ID) |>
       dplyr::select(.data$x, .data$y, .data$animalID)
 
     last.points <- terra::vect(
-      last.points_df,
-      geom = c("x", "y"),
+      x = last.points_df,
+      geom = c('x', 'y'),
       crs = crs
     )
 
     terra::writeVector(
-      last.points,
-      filename = paste0("last_locations.", file_ext),
+      x = last.points,
+      filename = paste0('last_locations.', file_ext),
       filetype = filetype,
-      overwrite = TRUE
+      overwrite = T
     )
   }
 
+  # ----------------------------------------------------------------------------------------------------------------------
+  # movement traces
+  # ----------------------------------------------------------------------------------------------------------------------
+
+  #1) build per-individual movement lines and write them
   if (isTRUE(trace)) {
     trace_df <- GPS_window |>
       dplyr::mutate(animalID = .data$ID) |>
       dplyr::select(.data$x, .data$y, .data$animalID, .data$Date)
 
     trace_vect <- terra::vect(
-      trace_df,
-      geom = c("x", "y"),
+      x = trace_df,
+      geom = c('x', 'y'),
       crs = crs
     )
 
     animal <- unique(trace_vect$animalID)
-    trace.list <- vector("list", length(animal))
+    trace.list <- vector(mode = 'list', length = length(animal))
 
     for (i in seq_along(animal)) {
       ind.trace <- trace_vect[trace_vect$animalID == animal[i], ]
@@ -164,17 +192,22 @@ sheep_cluster <- function(GPS,
       trace.list[[i]] <- terra::as.lines(ind.trace)
     }
 
-    trace.out <- do.call(rbind, trace.list)
+    trace.out <- do.call(what = rbind, args = trace.list)
     trace.out$ID <- animal
 
     terra::writeVector(
-      trace.out,
-      filename = paste0("movement_paths.", file_ext),
+      x = trace.out,
+      filename = paste0('movement_paths.', file_ext),
       filetype = filetype,
-      overwrite = TRUE
+      overwrite = T
     )
   }
 
+  # ----------------------------------------------------------------------------------------------------------------------
+  # cluster points
+  # ----------------------------------------------------------------------------------------------------------------------
+
+  #1) order points for clustering and vectorize
   GPS_clust <- GPS_window |>
     dplyr::select(
       x = .data$x,
@@ -185,11 +218,12 @@ sheep_cluster <- function(GPS,
     dplyr::arrange(.data$animalID, .data$datetime)
 
   points <- terra::vect(
-    GPS_clust,
-    geom = c("x", "y"),
+    x = GPS_clust,
+    geom = c('x', 'y'),
     crs = crs
   )
 
+  #2) run DBSCAN on the coordinate matrix
   points.matrix <- cbind(GPS_clust$x, GPS_clust$y)
 
   cluster_out <- dbscan::dbscan(
@@ -198,55 +232,62 @@ sheep_cluster <- function(GPS,
     minPts = minimum.points
   )
 
+  #3) attach cluster ids and drop noise
   points$clusterID <- cluster_out$cluster
 
   cluster_ids <- sort(unique(points$clusterID))
   cluster_ids <- cluster_ids[cluster_ids > 0]
 
+  # ----------------------------------------------------------------------------------------------------------------------
+  # assemble search areas and plot
+  # ----------------------------------------------------------------------------------------------------------------------
+
+  #1) handle the no-cluster case, optionally plotting, and return points
   if (length(cluster_ids) == 0) {
-    message("No clusters found.")
+    message('No clusters found.')
 
     if (isTRUE(basic.plot)) {
-      plotted <- FALSE
+      plotted <- F
 
       if (!is.null(last.points)) {
         terra::plot(
-          last.points,
-          col = "red",
+          x = last.points,
+          col = 'red',
           pch = 16,
-          main = "sheep_cluster outputs"
+          main = 'sheep_cluster outputs'
         )
-        plotted <- TRUE
+        plotted <- T
       }
 
       if (!is.null(trace.out)) {
         if (!plotted) {
           terra::plot(
-            trace.out,
-            col = "blue",
+            x = trace.out,
+            col = 'blue',
             lwd = 2,
-            main = "sheep_cluster outputs"
+            main = 'sheep_cluster outputs'
           )
         } else {
-          terra::plot(trace.out, col = "blue", lwd = 2, add = TRUE)
+          terra::plot(x = trace.out, col = 'blue', lwd = 2, add = T)
         }
       }
 
       graphics::legend(
-        "topright",
-        legend = c("Last locations", "Movement paths"),
-        col = c("red", "blue"),
+        x = 'topright',
+        legend = c('Last locations', 'Movement paths'),
+        col = c('red', 'blue'),
         pch = c(16, NA),
         lty = c(NA, 1),
         lwd = c(NA, 2),
-        bty = "n"
+        bty = 'n'
       )
     }
 
     return(points)
   }
 
-  mcp.list <- vector("list", length(cluster_ids))
+  #2) draw a convex hull around each non-noise cluster
+  mcp.list <- vector(mode = 'list', length = length(cluster_ids))
   for (i in seq_along(cluster_ids)) {
     cluster.points <- points[points$clusterID == cluster_ids[i], ]
     mcp <- terra::convHull(cluster.points)
@@ -254,44 +295,47 @@ sheep_cluster <- function(GPS,
     mcp.list[[i]] <- mcp
   }
 
-  search.areas <- do.call(rbind, mcp.list)
+  #3) combine the hulls and write the search areas
+  search.areas <- do.call(what = rbind, args = mcp.list)
 
   terra::writeVector(
-    search.areas,
-    filename = paste0("search_areas.", file_ext),
+    x = search.areas,
+    filename = paste0('search_areas.', file_ext),
     filetype = filetype,
-    overwrite = TRUE
+    overwrite = T
   )
 
+  #4) optionally plot search areas with traces and last locations
   if (isTRUE(basic.plot)) {
     terra::plot(
-      search.areas,
-      col = "lightblue",
-      border = "blue",
+      x = search.areas,
+      col = 'lightblue',
+      border = 'blue',
       lwd = 2,
-      main = "sheep_cluster outputs"
+      main = 'sheep_cluster outputs'
     )
 
     if (!is.null(trace.out)) {
-      terra::plot(trace.out, col = "darkgreen", lwd = 2, add = TRUE)
+      terra::plot(x = trace.out, col = 'darkgreen', lwd = 2, add = T)
     }
 
     if (!is.null(last.points)) {
-      terra::plot(last.points, col = "red", pch = 16, add = TRUE)
+      terra::plot(x = last.points, col = 'red', pch = 16, add = T)
     }
 
     graphics::legend(
-      "topright",
-      legend = c("Search areas", "Movement paths", "Last locations"),
-      fill = c("lightblue", NA, NA),
-      border = c("blue", NA, NA),
-      col = c("blue", "darkgreen", "red"),
+      x = 'topright',
+      legend = c('Search areas', 'Movement paths', 'Last locations'),
+      fill = c('lightblue', NA, NA),
+      border = c('blue', NA, NA),
+      col = c('blue', 'darkgreen', 'red'),
       lty = c(NA, 1, NA),
       lwd = c(NA, 2, NA),
       pch = c(NA, NA, 16),
-      bty = "n"
+      bty = 'n'
     )
   }
 
+  #5) return the assembled search areas
   search.areas
 }

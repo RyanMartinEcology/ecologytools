@@ -25,100 +25,124 @@
 #' @export
 theme_martin <- function(
     base_size = NULL,
-    base_family = "Libre Caslon Text",
+    base_family = 'Libre Caslon Text',
     line_width = 1.1,
-    legend_position = c("right", "left", "top", "bottom"),
-    facet_fill = c("sand", "teal", "none"),
-    grid = c("off", "x", "y", "xy"),
-    full_box = FALSE,
+    legend_position = c('right', 'left', 'top', 'bottom'),
+    facet_fill = c('sand', 'teal', 'none'),
+    grid = c('off', 'x', 'y', 'xy'),
+    full_box = F,
     axis_text_x_angle = 0,
-    publication = FALSE
+    publication = F
 ) {
+
+  # --------------------------------------------------------------------------------------------------------------------
+  # validate inputs
+  # --------------------------------------------------------------------------------------------------------------------
+
+  #1) resolve the choice-restricted arguments
   legend_position <- match.arg(legend_position)
   facet_fill <- match.arg(facet_fill)
   grid <- match.arg(grid)
 
-  # ---- resolve publication-dependent defaults ----
+  # --------------------------------------------------------------------------------------------------------------------
+  # resolve publication-dependent defaults
+  # --------------------------------------------------------------------------------------------------------------------
+
+  #1) resolve the base size when not supplied
   if (is.null(base_size)) {
     base_size <- if (publication) 10 else 12
   }
-  if (publication && identical(base_family, "Libre Caslon Text")) {
-    base_family <- "Times New Roman"
+
+  #2) swap the default family for publication output
+  if (publication && identical(x = base_family, y = 'Libre Caslon Text')) {
+    base_family <- 'Times New Roman'
   }
 
-  base_cols <- pal("base")
+  #3) replace off-black with pure black for publication output
+  base_cols <- pal('base')
   if (publication) {
-    base_cols$black <- "#000000"
+    base_cols$black <- '#000000'
   }
 
-  # ---- helper values ----
+  # --------------------------------------------------------------------------------------------------------------------
+  # derive helper values
+  # --------------------------------------------------------------------------------------------------------------------
+
+  #1) compute the half-line spacing unit
   half_line <- base_size / 2
+
+  #2) pick the facet strip fill color
   facet_col <- switch(
     facet_fill,
-    sand = pal("sand"),
-    teal = pal("teal"),
+    sand = pal('sand'),
+    teal = pal('teal'),
     none = base_cols$white
   )
 
-  # ---- gridline visibility ----
-  show_grid_x <- grid %in% c("x", "xy")
-  show_grid_y <- grid %in% c("y", "xy")
+  #3) determine gridline visibility per axis
+  show_grid_x <- grid %in% c('x', 'xy')
+  show_grid_y <- grid %in% c('y', 'xy')
 
-  # ---- x-axis text rotation ----
+  #4) set x-axis text justification for the chosen rotation
   x_hjust <- if (axis_text_x_angle == 0) 0.5 else 1
   x_vjust <- if (axis_text_x_angle == 0) 0.5 else 1
 
-  # ---- element constructors ----
+  #5) define the shared black-line element constructor
   blk_line <- function(lw = line_width) {
     ggplot2::element_line(colour = base_cols$black, linewidth = lw)
   }
 
+  # --------------------------------------------------------------------------------------------------------------------
+  # assemble the theme
+  # --------------------------------------------------------------------------------------------------------------------
+
+  #1) build on theme_void and override the relevant elements
   ggplot2::theme_void(
-    base_size   = base_size,
+    base_size = base_size,
     base_family = base_family
   ) +
     ggplot2::theme(
-      # ---- root inheritance ----
+      # root inheritance
       text = ggplot2::element_text(
         family = base_family,
-        size   = base_size,
+        size = base_size,
         colour = base_cols$black
       ),
       line = blk_line(),
 
-      # ---- plot-level ----
-      plot.background  = ggplot2::element_blank(),
+      # plot-level
+      plot.background = ggplot2::element_blank(),
       panel.background = ggplot2::element_blank(),
-      plot.margin      = ggplot2::margin(half_line, half_line, half_line, half_line),
+      plot.margin = ggplot2::margin(t = half_line, r = half_line, b = half_line, l = half_line),
 
       plot.title = ggplot2::element_text(
-        size   = base_size + 3,
-        face   = "bold",
-        hjust  = 0,
+        size = base_size + 3,
+        face = 'bold',
+        hjust = 0,
         colour = base_cols$black,
         margin = ggplot2::margin(b = half_line)
       ),
       plot.subtitle = ggplot2::element_text(
-        size   = base_size - 1,
-        face   = "italic",
-        hjust  = 0,
+        size = base_size - 1,
+        face = 'italic',
+        hjust = 0,
         colour = base_cols$black,
         margin = ggplot2::margin(b = half_line)
       ),
 
-      # ---- axes ----
+      # axes
       axis.title.x = ggplot2::element_text(
         margin = ggplot2::margin(t = half_line)
       ),
       axis.title.y = ggplot2::element_text(
         margin = ggplot2::margin(r = half_line),
-        angle  = 90
+        angle = 90
       ),
       axis.text.x = ggplot2::element_text(
         colour = base_cols$black,
-        angle  = axis_text_x_angle,
-        hjust  = x_hjust,
-        vjust  = x_vjust,
+        angle = axis_text_x_angle,
+        hjust = x_hjust,
+        vjust = x_vjust,
         margin = ggplot2::margin(t = half_line / 2)
       ),
       axis.text.y = ggplot2::element_text(
@@ -129,33 +153,33 @@ theme_martin <- function(
       # axis lines: bottom/left only when full_box = FALSE; suppressed when TRUE
       # (panel.border takes over to avoid double-drawing on bottom and left edges)
       axis.line.x.bottom = if (full_box) ggplot2::element_blank() else blk_line(),
-      axis.line.y.left   = if (full_box) ggplot2::element_blank() else blk_line(),
-      axis.line.x.top    = ggplot2::element_blank(),
-      axis.line.y.right  = ggplot2::element_blank(),
+      axis.line.y.left = if (full_box) ggplot2::element_blank() else blk_line(),
+      axis.line.x.top = ggplot2::element_blank(),
+      axis.line.y.right = ggplot2::element_blank(),
 
       # ticks: always on bottom/left; on top/right only when full_box = TRUE
       axis.ticks.x.bottom = blk_line(),
-      axis.ticks.y.left   = blk_line(),
-      axis.ticks.x.top    = if (full_box) blk_line() else ggplot2::element_blank(),
-      axis.ticks.y.right  = if (full_box) blk_line() else ggplot2::element_blank(),
-      axis.ticks.length   = grid::unit(3, "pt"),
+      axis.ticks.y.left = blk_line(),
+      axis.ticks.x.top = if (full_box) blk_line() else ggplot2::element_blank(),
+      axis.ticks.y.right = if (full_box) blk_line() else ggplot2::element_blank(),
+      axis.ticks.length = grid::unit(x = 3, units = 'pt'),
 
-      # ---- panel border ----
+      # panel border
       panel.border = if (full_box) {
         ggplot2::element_rect(
-          fill      = NA,
-          colour    = base_cols$black,
+          fill = NA,
+          colour = base_cols$black,
           linewidth = line_width
         )
       } else {
         ggplot2::element_blank()
       },
 
-      # ---- gridlines ----
+      # gridlines
       panel.grid.minor = ggplot2::element_blank(),
       panel.grid.major.x = if (show_grid_x) {
         ggplot2::element_line(
-          colour    = base_cols$grid,
+          colour = base_cols$grid,
           linewidth = line_width / 2
         )
       } else {
@@ -163,50 +187,59 @@ theme_martin <- function(
       },
       panel.grid.major.y = if (show_grid_y) {
         ggplot2::element_line(
-          colour    = base_cols$grid,
+          colour = base_cols$grid,
           linewidth = line_width / 2
         )
       } else {
         ggplot2::element_blank()
       },
 
-      # ---- legend ----
-      legend.position    = legend_position,
-      legend.background  = ggplot2::element_blank(),
-      legend.key         = ggplot2::element_blank(),
-      legend.title       = ggplot2::element_text(
+      # legend
+      legend.position = legend_position,
+      legend.background = ggplot2::element_blank(),
+      legend.key = ggplot2::element_blank(),
+      legend.title = ggplot2::element_text(
         colour = base_cols$black,
-        face   = "plain",
-        hjust  = 0.5
+        face = 'plain',
+        hjust = 0.5
       ),
       legend.title.align = 0.5,
-      legend.text        = ggplot2::element_text(colour = base_cols$black),
+      legend.text = ggplot2::element_text(colour = base_cols$black),
 
-      # ---- facet strips ----
-      panel.spacing = grid::unit(0.5, "lines"),
+      # facet strips
+      panel.spacing = grid::unit(x = 0.5, units = 'lines'),
       strip.background = ggplot2::element_rect(
-        fill   = facet_col,
+        fill = facet_col,
         colour = NA
       ),
       strip.text = ggplot2::element_text(
         colour = base_cols$black,
-        face   = "bold",
-        margin = ggplot2::margin(half_line / 2, half_line / 2, half_line / 2, half_line / 2)
+        face = 'bold',
+        margin = ggplot2::margin(t = half_line / 2, r = half_line / 2, b = half_line / 2, l = half_line / 2)
       )
     )
 }
 
 
-# =========================
-# INTERNAL: scale dispatch
-# =========================
+# ----------------------------------------------------------------------------------------------------------------------
+# internal: scale dispatch
+# ----------------------------------------------------------------------------------------------------------------------
+
 .martin_scale_choices <- c(
-  "discrete", "plants", "phenology", "gender", "season",
-  "temp", "earth", "cont", "ribbon_forest", "ribbon_teal"
+  'discrete',
+  'plants',
+  'phenology',
+  'gender',
+  'season',
+  'temp',
+  'earth',
+  'cont',
+  'ribbon_forest',
+  'ribbon_teal'
 )
 
 .martin_scale_is_continuous <- function(palette) {
-  palette %in% c("temp", "earth", "cont", "ribbon_forest", "ribbon_teal")
+  palette %in% c('temp', 'earth', 'cont', 'ribbon_forest', 'ribbon_teal')
 }
 
 
@@ -222,9 +255,21 @@ theme_martin <- function(
 #'
 #' @return A ggplot2 scale.
 #' @export
-scale_color_martin <- function(palette = "discrete") {
-  palette <- match.arg(palette, .martin_scale_choices)
+scale_color_martin <- function(palette = 'discrete') {
+
+  # --------------------------------------------------------------------------------------------------------------------
+  # resolve the palette
+  # --------------------------------------------------------------------------------------------------------------------
+
+  #1) validate the palette name and pull its values
+  palette <- match.arg(arg = palette, choices = .martin_scale_choices)
   values <- unname(pal(palette))
+
+  # --------------------------------------------------------------------------------------------------------------------
+  # build the scale
+  # --------------------------------------------------------------------------------------------------------------------
+
+  #1) dispatch to a continuous or discrete color scale
   if (.martin_scale_is_continuous(palette)) {
     ggplot2::scale_color_gradientn(colors = values)
   } else {
@@ -244,14 +289,24 @@ scale_color_martin <- function(palette = "discrete") {
 #'
 #' @return A ggplot2 scale.
 #' @export
-scale_fill_martin <- function(palette = "discrete") {
-  palette <- match.arg(palette, .martin_scale_choices)
+scale_fill_martin <- function(palette = 'discrete') {
+
+  # --------------------------------------------------------------------------------------------------------------------
+  # resolve the palette
+  # --------------------------------------------------------------------------------------------------------------------
+
+  #1) validate the palette name and pull its values
+  palette <- match.arg(arg = palette, choices = .martin_scale_choices)
   values <- unname(pal(palette))
+
+  # --------------------------------------------------------------------------------------------------------------------
+  # build the scale
+  # --------------------------------------------------------------------------------------------------------------------
+
+  #1) dispatch to a continuous or discrete fill scale
   if (.martin_scale_is_continuous(palette)) {
     ggplot2::scale_fill_gradientn(colors = values)
   } else {
     ggplot2::scale_fill_manual(values = pal(palette))
   }
 }
-
-

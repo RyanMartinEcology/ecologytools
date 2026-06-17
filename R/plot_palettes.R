@@ -1,40 +1,58 @@
-# =========================
-# INTERNAL PALETTE STORAGE
-# =========================
+# ----------------------------------------------------------------------------------------------------------------------
+# internal palette storage
+# ----------------------------------------------------------------------------------------------------------------------
+
 .martin_palettes <- list(
   base = list(
-    white = "#FFFFF0",
-    black = "#1A1A14",
-    grid  = "#D8D4C8"
+    white = '#FFFFF0',
+    black = '#1A1A14',
+    grid = '#D8D4C8'
   ),
   facet = list(
-    teal = "#E3ECEB",
-    sand = "#F3E8D0"
+    teal = '#E3ECEB',
+    sand = '#F3E8D0'
   ),
   ribbon = list(
     forest = c(
-      outer = "#DDE5D8",
-      mid   = "#7FA37C",
-      inner = "#2F4F3A"
+      outer = '#DDE5D8',
+      mid = '#7FA37C',
+      inner = '#2F4F3A'
     ),
     teal = c(
-      outer = "#DCE6E8",
-      mid   = "#6F8F95",
-      inner = "#2F4F54"
+      outer = '#DCE6E8',
+      mid = '#6F8F95',
+      inner = '#2F4F54'
     )
   ),
   gradient = list(
     earth = c(
-      "#3F6B35", "#567C40", "#6F8E4C", "#89A05A",
-      "#A1A764", "#947A50", "#68482F", "#3B2218"
+      '#3F6B35',
+      '#567C40',
+      '#6F8E4C',
+      '#89A05A',
+      '#A1A764',
+      '#947A50',
+      '#68482F',
+      '#3B2218'
     ),
     cont = c(
-      "#243B3B", "#2F5A5A", "#3F7A74", "#5F9A8C",
-      "#87B09A", "#B7BE8A", "#D6C07A", "#F0E2B6"
+      '#243B3B',
+      '#2F5A5A',
+      '#3F7A74',
+      '#5F9A8C',
+      '#87B09A',
+      '#B7BE8A',
+      '#D6C07A',
+      '#F0E2B6'
     ),
     temp = c(
-      "#1B4F8C", "#4A85C2", "#9BB5C2", "#D4B59A",
-      "#D87856", "#E25822", "#C41E13"
+      '#1B4F8C',
+      '#4A85C2',
+      '#9BB5C2',
+      '#D4B59A',
+      '#D87856',
+      '#E25822',
+      '#C41E13'
     )
   ),
   # discrete = c(
@@ -42,51 +60,74 @@
   #   "#4E8F87", "#7A5A3A", "#8FA78F", "#E6D8A8"
   # ),
   discrete = c(
-    '#EE7733', '#0077BB', '#2F2F6B', "#D6A64C", '#EE3377', '#CC3311', '#009988'
+    '#EE7733',
+    '#0077BB',
+    '#2F2F6B',
+    '#D6A64C',
+    '#EE3377',
+    '#CC3311',
+    '#009988'
   ),
   discrete_plants = c(
-    grass = "#E8B82E",
-    shrub = "#C2451E",
-    forb  = "#7AAE3A",
-    tree  = "#0F2510",
-    fern  = "#3F8579"
+    grass = '#E8B82E',
+    shrub = '#C2451E',
+    forb = '#7AAE3A',
+    tree = '#0F2510',
+    fern = '#3F8579'
   ),
   plant_phenology = c(
-    emergent = "#7ED957",
-    flower   = "#2E5A2E",
-    fruiting = "#B5C436",
-    mature   = "#C99A1F",
-    senesced = "#4A2E1A"
+    emergent = '#7ED957',
+    flower = '#2E5A2E',
+    fruiting = '#B5C436',
+    mature = '#C99A1F',
+    senesced = '#4A2E1A'
   ),
   gender = c(
-    male    = "#2F2F6B",
-    female  = "#B8336A",
-    unknown = "#4A4A4A"
+    male = '#2F2F6B',
+    female = '#B8336A',
+    unknown = '#4A4A4A'
   ),
   season = c(
-    spring = "#A8C97F",
-    summer = "#D4A847",
-    fall   = "#B5562A",
-    winter = "#7A8FA6"
+    spring = '#A8C97F',
+    summer = '#D4A847',
+    fall = '#B5562A',
+    winter = '#7A8FA6'
   )
 )
 
-# =========================
-# VALID PALETTE NAMES
-# =========================
+# ----------------------------------------------------------------------------------------------------------------------
+# valid palette names
+# ----------------------------------------------------------------------------------------------------------------------
+
 .pal_choices <- c(
   # base + facet utilities
-  "base", "white", "black", "grid", "sand", "teal",
+  'base',
+  'white',
+  'black',
+  'grid',
+  'sand',
+  'teal',
   # discrete
-  "discrete", "plants", "phenology", "gender", "season",
+  'discrete',
+  'plants',
+  'phenology',
+  'gender',
+  'season',
   # continuous gradients
-  "temp", "earth", "cont",
+  'temp',
+  'earth',
+  'cont',
   # ribbon (continuous, 3-stop)
-  "ribbon_forest", "ribbon_teal"
+  'ribbon_forest',
+  'ribbon_teal'
 )
 
 .pal_discrete_names <- c(
-  "discrete", "plants", "phenology", "gender", "season"
+  'discrete',
+  'plants',
+  'phenology',
+  'gender',
+  'season'
 )
 
 #' Get a Martin palette
@@ -110,45 +151,64 @@
 #'   hex string for utility colors, or a list for `"base"`.
 #' @export
 pal <- function(palette, n = NULL) {
-  palette <- match.arg(palette, .pal_choices)
 
-  if (!is.null(n) && palette != "discrete") {
+  # --------------------------------------------------------------------------------------------------------------------
+  # validate inputs
+  # --------------------------------------------------------------------------------------------------------------------
+
+  #1) resolve the palette name against the valid set
+  palette <- match.arg(arg = palette, choices = .pal_choices)
+
+  #2) reject n for any palette other than discrete
+  if (!is.null(n) && palette != 'discrete') {
     stop(
       "`n` is only valid when `palette = \"discrete\"`.",
-      call. = FALSE
+      call. = F
     )
   }
 
+  # --------------------------------------------------------------------------------------------------------------------
+  # select the palette
+  # --------------------------------------------------------------------------------------------------------------------
+
+  #1) dispatch on the requested palette name
   out <- switch(
     palette,
     # utilities
-    base  = .martin_palettes$base,
+    base = .martin_palettes$base,
     white = .martin_palettes$base$white,
     black = .martin_palettes$base$black,
-    grid  = .martin_palettes$base$grid,
-    sand  = .martin_palettes$facet$sand,
-    teal  = .martin_palettes$facet$teal,
+    grid = .martin_palettes$base$grid,
+    sand = .martin_palettes$facet$sand,
+    teal = .martin_palettes$facet$teal,
     # discrete
-    discrete  = .martin_palettes$discrete,
-    plants    = .martin_palettes$discrete_plants,
+    discrete = .martin_palettes$discrete,
+    plants = .martin_palettes$discrete_plants,
     phenology = .martin_palettes$plant_phenology,
-    gender    = .martin_palettes$gender,
-    season    = .martin_palettes$season,
+    gender = .martin_palettes$gender,
+    season = .martin_palettes$season,
     # continuous
-    temp  = .martin_palettes$gradient$temp,
+    temp = .martin_palettes$gradient$temp,
     earth = .martin_palettes$gradient$earth,
-    cont  = .martin_palettes$gradient$cont,
+    cont = .martin_palettes$gradient$cont,
     # ribbon
     ribbon_forest = .martin_palettes$ribbon$forest,
-    ribbon_teal   = .martin_palettes$ribbon$teal
+    ribbon_teal = .martin_palettes$ribbon$teal
   )
 
-  if (palette == "discrete" && !is.null(n)) {
+  # --------------------------------------------------------------------------------------------------------------------
+  # subset the discrete palette
+  # --------------------------------------------------------------------------------------------------------------------
+
+  #1) when n is supplied for the discrete palette, return the first n colors
+  if (palette == 'discrete' && !is.null(n)) {
     n <- as.integer(n)
     if (is.na(n) || n < 1 || n > length(out)) {
       stop(
-        "`n` must be between 1 and ", length(out), ".",
-        call. = FALSE
+        '`n` must be between 1 and ',
+        length(out),
+        '.',
+        call. = F
       )
     }
     out <- out[seq_len(n)]
@@ -165,10 +225,21 @@ pal <- function(palette, n = NULL) {
 #' @return A character vector of `n` hex colors.
 #' @export
 pal_continuous_n <- function(n = 256) {
+
+  # --------------------------------------------------------------------------------------------------------------------
+  # validate inputs
+  # --------------------------------------------------------------------------------------------------------------------
+
+  #1) require a positive integer count
   n <- as.integer(n)
   if (is.na(n) || n < 1) {
-    stop("`n` must be a positive integer.", call. = FALSE)
+    stop('`n` must be a positive integer.', call. = F)
   }
-  grDevices::colorRampPalette(.martin_palettes$gradient$cont)(n)
-}
 
+  # --------------------------------------------------------------------------------------------------------------------
+  # interpolate colors
+  # --------------------------------------------------------------------------------------------------------------------
+
+  #1) interpolate n colors across the continuous gradient
+  grDevices::colorRampPalette(colors = .martin_palettes$gradient$cont)(n)
+}

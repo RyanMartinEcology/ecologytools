@@ -32,7 +32,15 @@
 #' @export
 
 aggregate_raster <- function(x, n, fun = mean, cores = 1) {
-  stopifnot(inherits(x, "SpatRaster"))
+
+  # ----------------------------------------------------------------------------------------------------------------------
+  # validate inputs
+  # ----------------------------------------------------------------------------------------------------------------------
+
+  #1) require a SpatRaster
+  stopifnot(inherits(x = x, what = 'SpatRaster'))
+
+  #2) require a single positive whole-number group size
   stopifnot(
     is.numeric(n),
     length(n) == 1,
@@ -40,7 +48,11 @@ aggregate_raster <- function(x, n, fun = mean, cores = 1) {
     n > 0,
     n %% 1 == 0
   )
+
+  #3) require an aggregation function
   stopifnot(is.function(fun))
+
+  #4) require a single positive whole-number core count
   stopifnot(
     is.numeric(cores),
     length(cores) == 1,
@@ -49,19 +61,35 @@ aggregate_raster <- function(x, n, fun = mean, cores = 1) {
     cores %% 1 == 0
   )
 
+  #5) require at least one layer
   n_layers <- terra::nlyr(x)
-
   if (n_layers < 1) {
-    stop("x must have at least 1 layer.")
+    stop('x must have at least 1 layer.')
   }
 
-  full_periods <- n_layers %/% n
-  grouping <- rep(seq_len(full_periods), each = n)
+  # ----------------------------------------------------------------------------------------------------------------------
+  # build the grouping index
+  # ----------------------------------------------------------------------------------------------------------------------
 
+  #1) assign full blocks of size n
+  full_periods <- n_layers %/% n
+  grouping <- rep(x = seq_len(full_periods), each = n)
+
+  #2) append a trailing partial block when layers do not divide evenly
   remaining_layers <- n_layers %% n
   if (remaining_layers > 0) {
-    grouping <- c(grouping, rep(full_periods + 1, remaining_layers))
+    grouping <- c(grouping, rep(x = full_periods + 1, times = remaining_layers))
   }
 
-  terra::tapp(x, grouping, fun = fun, cores = cores)
+  # ----------------------------------------------------------------------------------------------------------------------
+  # aggregate layers
+  # ----------------------------------------------------------------------------------------------------------------------
+
+  #1) summarize each group with the supplied function
+  terra::tapp(
+    x = x,
+    index = grouping,
+    fun = fun,
+    cores = cores
+  )
 }
