@@ -1,16 +1,38 @@
+<div align="center">
+
+<img src="man/figures/ecologytools.svg" alt="ecologytools logo" width="200"/>
+
 # ecologytools
 
-R utilities for ecology, centered on the `fresh()` linear-programming model of
-habitat-scale forage resources for generalist herbivores and a suite of ggplot2
-plotting tools — the `theme_martin()` publication theme with custom palettes and
-scales. Also includes `terra`-based raster and terrain utilities, DBSCAN
-clustering of GPS locations, and forage/diet-quality summaries.
+**Utilities and data-visualization tools for ecology in R**
 
-License: GPL-3
+[![License: GPL-3](https://img.shields.io/badge/License-GPL--3-2A3B28?style=flat-square)](https://www.gnu.org/licenses/gpl-3.0)
+[![R](https://img.shields.io/badge/R-%E2%89%A5%204.5.0-4E8F87?style=flat-square&logo=r&logoColor=white)](https://www.r-project.org/)
+![Version](https://img.shields.io/badge/version-1.0-2A3B28?style=flat-square)
+![Status](https://img.shields.io/badge/status-active-40CFBB?style=flat-square)
 
-# Installation Instructions
+[Installation](#install) &nbsp;•&nbsp; [FRESH](#fresh) &nbsp;•&nbsp; [Plotting](#plotting) &nbsp;•&nbsp; [Spatial](#spatial) &nbsp;•&nbsp; [Forage &amp; Diet](#diet) &nbsp;•&nbsp; [Utilities](#utilities)
 
-## remotes Package Installation
+</div>
+
+<p align="center">
+R utilities for ecology, centered on the <code>fresh()</code> linear-programming
+model of habitat-scale forage resources for generalist herbivores and a suite of
+ggplot2 plotting tools — the <code>theme_martin()</code> publication theme with
+custom palettes and scales. Also includes <code>terra</code>-based raster and
+terrain utilities, DBSCAN clustering of GPS locations, and forage/diet-quality
+summaries.
+</p>
+
+<p align="center"><sub>License: GPL-3</sub></p>
+
+---
+
+<a id="install"></a>
+
+## 📦 Installation
+
+### Using `remotes`
 
 ```r
 install.packages("remotes")
@@ -18,7 +40,7 @@ remotes::install_github("RyanMartinEcology/ecologytools")
 library(ecologytools)
 ```
 
-## devtools Package Installation
+### Using `devtools`
 
 ```r
 install.packages("devtools")
@@ -26,8 +48,12 @@ devtools::install_github("RyanMartinEcology/ecologytools")
 library(ecologytools)
 ```
 
-<details>
-<summary><b>FRESH: Forage Resource Evaluation System for Habitat <code>fresh()</code></b></summary>
+<a id="fresh"></a>
+
+## 🌿 FRESH — Forage Resource Evaluation System for Habitat
+
+<details open>
+<summary><b><code>fresh()</code> — maximize suitable forage via linear programming</b></summary>
 
 `fresh()` computes the maximum suitable forage biomass that meets minimum
 digestible energy (DE) and digestible protein (DP) concentration constraints for
@@ -85,8 +111,12 @@ multi$summary
 
 </details>
 
+<a id="plotting"></a>
+
+## 🎨 Plotting Utilities
+
 <details>
-<summary><b>Plot Utility Examples</b></summary>
+<summary><b>Plot utility examples — <code>theme_martin()</code> &amp; <code>scale_*_martin()</code></b></summary>
 
 ```r
 library(ggplot2)
@@ -244,7 +274,9 @@ pal_continuous_n(256)  # 256 colors interpolated from the "cont" gradient
 
 </details>
 
-# Spatial Utilities
+<a id="spatial"></a>
+
+## 🗺️ Spatial Utilities
 
 <details>
 <summary><b>Distance to Escape Terrain <code>dist_escape()</code></b></summary>
@@ -394,7 +426,9 @@ areas
 
 </details>
 
-# Forage & Diet Tools
+<a id="diet"></a>
+
+## 🌱 Forage & Diet Tools
 
 <details>
 <summary><b>Modal Phenology by Period <code>calc_phenology_mode()</code></b></summary>
@@ -507,7 +541,9 @@ out$dropped   # audit of taxa excluded from each sample, with reasons
 
 </details>
 
-# Base Utilities
+<a id="utilities"></a>
+
+## 🔧 Base Utilities
 
 <details>
 <summary><b>Time an Expression <code>time_it()</code></b></summary>
@@ -526,6 +562,10 @@ result <- time_it(Sys.sleep(1), label = "short nap")
 ```r
 library(ecologytools)
 # prints R version, platform, and versions of attached packages
+package_info()
+```
+
+</details>
 package_info()
 ```
 
