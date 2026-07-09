@@ -31,7 +31,6 @@ Imports:
     lubridate,
     ragg,
     rlang,
-    showtext,
     stats,
     terra,
     tibble,
